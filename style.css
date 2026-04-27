@@ -1,0 +1,467 @@
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  --bg:            #121212;
+  --card-bg:       #1E1E1E;
+  --text-primary:  #FFFFFF;
+  --text-secondary:#B0B0B0;
+
+  --zone-1: #9E9E9E;
+  --zone-2: #2196F3;
+  --zone-3: #4CAF50;
+  --zone-4: #FF9800;
+  --zone-5: #F44336;
+
+  --radius-card:   20px;
+  --radius-btn:    999px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ─── Screen Visibility ───────────────────────────────���───────────────────── */
+.screen[hidden] { display: none; }
+
+/* ─── Reset / Base ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Setup Screen ────────────────────────────────────────────────────────── */
+.setup-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  gap: 32px;
+}
+
+.setup-screen h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.setup-users {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 480px;
+}
+
+@media (min-width: 640px) {
+  .setup-users { flex-direction: row; }
+  .setup-user  { flex: 1; }
+}
+
+.setup-user {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup-user h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.field input {
+  background: #2A2A2A;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 16px;
+  padding: 12px 14px;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.field input::placeholder { color: #555; }
+.field input:focus { background: #333; }
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 700;
+  padding: 14px 24px;
+  font-size: 16px;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+
+.btn:active { opacity: 0.8; }
+
+.btn-connect {
+  background: #333;
+  color: var(--text-primary);
+}
+
+.btn-connect.connected {
+  background: var(--zone-3);
+  color: #fff;
+}
+
+.btn-start {
+  background: var(--zone-2);
+  color: #fff;
+  font-size: 18px;
+  padding: 18px 32px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.btn-start:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-end {
+  background: #333;
+  color: var(--text-primary);
+  font-size: 16px;
+  padding: 14px 40px;
+  width: auto;
+}
+
+.btn-new-session {
+  background: var(--zone-2);
+  color: #fff;
+  font-size: 18px;
+  padding: 18px 40px;
+  width: auto;
+}
+
+/* ─── Status & Error Text ─────────────────────────────────────────────────── */
+.status {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-height: 18px;
+  text-align: center;
+}
+
+.status.connected  { color: var(--zone-3); }
+.status.connecting { color: var(--zone-4); }
+.status.error      { color: var(--zone-5); }
+
+/* ─── Dashboard Screen ────────────────────────────────────────────────────── */
+.dashboard-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 16px;
+  gap: 16px;
+}
+
+.user-panels {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.user-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.user-panel .tile { flex: 1; }
+
+@media (orientation: portrait) {
+  .user-panels { flex-direction: column; }
+}
+
+/* ─── Tile ────────────────────────────────────────────────────────────────── */
+.tile {
+  border-radius: var(--radius-card);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--card-bg);
+  transition: background-color 0.5s ease;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tile.zone-1 { background-color: var(--zone-1); }
+.tile.zone-2 { background-color: var(--zone-2); }
+.tile.zone-3 { background-color: var(--zone-3); }
+.tile.zone-4 { background-color: var(--zone-4); }
+.tile.zone-5 { background-color: var(--zone-5); }
+
+.tile--disconnected {
+  background-color: #2A2A2A !important;
+  opacity: 0.7;
+}
+
+.tile__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tile__name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.tile__zone-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.tile__hr {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.tile__pct {
+  font-size: clamp(72px, 11vw, 110px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -3px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.tile__bpm {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 0;
+}
+
+.tile__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tile__progress-track {
+  background: rgba(0,0,0,0.25);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.tile__progress-bar {
+  background: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  height: 100%;
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.tile__progress-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  text-align: right;
+}
+
+.tile__disconnect-msg {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.tile__reconnect-btn {
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-btn);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 20px;
+  cursor: pointer;
+  align-self: center;
+}
+
+/* ─── Dashboard Footer ────────────────────────────────────────────────────── */
+.dashboard-footer {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+/* ─── Summary Screen ──────────────────────────────────────────────────────── */
+.summary-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px;
+  gap: 28px;
+}
+
+.summary-screen h1 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.summary-panels {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 100%;
+  max-width: 1040px;
+}
+
+.summary-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .summary-panels { flex-direction: column; }
+}
+
+.summary-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-card__name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.summary-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.summary-stat__label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.summary-stat__value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.summary-zones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-zones__title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-zone-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-zone-row__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.summary-zone-row__label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.summary-zone-row__bar-track {
+  flex: 1;
+  background: #2A2A2A;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.summary-zone-row__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease;
+}
+
+.summary-zone-row__time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.summary-empty {
+  color: var(--text-secondary);
+  font-size: 16px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+/* ─── HR Graph Canvas ─────────────────────────────────────────────────────── */
+.graph-canvas {
+  display: block;
+  width: 100%;
+  height: 140px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.graph-canvas--summary {
+  height: 160px;
+}

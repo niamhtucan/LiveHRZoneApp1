@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveHRZone</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Setup Screen ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-setup">
+    <div class="setup-screen">
+      <h1>LiveHRZone</h1>
+
+      <div class="setup-users">
+        <!-- User 0 -->
+        <div class="setup-user">
+          <h2>Athlete 1</h2>
+          <div class="field">
+            <label for="name0">Name</label>
+            <input type="text" id="name0" placeholder="e.g. Niamh" autocomplete="off" autocorrect="off">
+          </div>
+          <div class="field">
+            <label for="maxhr0">Max Heart Rate</label>
+            <input type="number" id="maxhr0" placeholder="e.g. 190" min="100" max="220">
+          </div>
+          <button class="btn btn-connect" id="connect0" type="button">Connect Watch</button>
+          <p class="status" id="status0">Not connected</p>
+        </div>
+
+        <!-- User 1 -->
+        <div class="setup-user">
+          <h2>Athlete 2</h2>
+          <div class="field">
+            <label for="name1">Name</label>
+            <input type="text" id="name1" placeholder="e.g. Partner" autocomplete="off" autocorrect="off">
+          </div>
+          <div class="field">
+            <label for="maxhr1">Max Heart Rate</label>
+            <input type="number" id="maxhr1" placeholder="e.g. 185" min="100" max="220">
+          </div>
+          <button class="btn btn-connect" id="connect1" type="button">Connect Watch</button>
+          <p class="status" id="status1">Not connected</p>
+        </div>
+      </div>
+
+      <button class="btn btn-start" id="startBtn" type="button" disabled>Start Workout</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard Screen ─────────────────────────────────────────────── -->
+  <div class="screen" id="screen-dashboard" hidden>
+    <div class="dashboard-screen">
+      <div class="user-panels">
+
+        <!-- User 0 panel -->
+        <div class="user-panel">
+          <div class="tile" id="tile0">
+            <div class="tile__header">
+              <span class="tile__name" id="tileName0">Athlete 1</span>
+              <span class="tile__zone-label" id="tileZone0">–</span>
+            </div>
+            <div class="tile__hr" id="tileHR0">
+              <span class="tile__pct" id="tilePct0">--%</span>
+              <span class="tile__bpm"><span id="tileHRValue0">--</span> bpm</span>
+            </div>
+            <div class="tile__footer">
+              <div class="tile__progress-track">
+                <div class="tile__progress-bar" id="tileBar0"></div>
+              </div>
+              <span class="tile__progress-label" id="tileBarLabel0"></span>
+              <button class="tile__reconnect-btn" id="tileReconnect0" style="display:none" type="button">Reconnect</button>
+            </div>
+          </div>
+          <canvas class="graph-canvas" id="graphCanvas0"></canvas>
+        </div>
+
+        <!-- User 1 panel -->
+        <div class="user-panel">
+          <div class="tile" id="tile1">
+            <div class="tile__header">
+              <span class="tile__name" id="tileName1">Athlete 2</span>
+              <span class="tile__zone-label" id="tileZone1">–</span>
+            </div>
+            <div class="tile__hr" id="tileHR1">
+              <span class="tile__pct" id="tilePct1">--%</span>
+              <span class="tile__bpm"><span id="tileHRValue1">--</span> bpm</span>
+            </div>
+            <div class="tile__footer">
+              <div class="tile__progress-track">
+                <div class="tile__progress-bar" id="tileBar1"></div>
+              </div>
+              <span class="tile__progress-label" id="tileBarLabel1"></span>
+              <button class="tile__reconnect-btn" id="tileReconnect1" style="display:none" type="button">Reconnect</button>
+            </div>
+          </div>
+          <canvas class="graph-canvas" id="graphCanvas1"></canvas>
+        </div>
+
+      </div>
+      <div class="dashboard-footer">
+        <button class="btn btn-end" id="endBtn" type="button">End Workout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Summary Screen ───────────────────────────────────────────────── -->
+  <div class="screen" id="screen-summary" hidden>
+    <div class="summary-screen">
+      <h1>Session Summary</h1>
+
+      <div class="summary-panels">
+
+        <!-- User 0 summary panel -->
+        <div class="summary-panel">
+          <div class="summary-card" id="summaryCard0">
+            <div class="summary-card__name">Athlete 1</div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Avg Heart Rate</span>
+              <span class="summary-stat__value summary-avg-hr">--</span>
+            </div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Total Time</span>
+              <span class="summary-stat__value summary-total-time">--</span>
+            </div>
+            <div class="summary-zones">
+              <div class="summary-zones__title">Time in Zone</div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#9E9E9E"></div>
+                <span class="summary-zone-row__label">Zone 1</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-0" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-0">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#2196F3"></div>
+                <span class="summary-zone-row__label">Zone 2</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-1" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-1">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#4CAF50"></div>
+                <span class="summary-zone-row__label">Zone 3</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-2" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-2">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#FF9800"></div>
+                <span class="summary-zone-row__label">Zone 4</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-3" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-3">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#F44336"></div>
+                <span class="summary-zone-row__label">Zone 5</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-4" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-4">0m 00s</span>
+              </div>
+            </div>
+          </div>
+          <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary0"></canvas>
+        </div>
+
+        <!-- User 1 summary panel -->
+        <div class="summary-panel">
+          <div class="summary-card" id="summaryCard1">
+            <div class="summary-card__name">Athlete 2</div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Avg Heart Rate</span>
+              <span class="summary-stat__value summary-avg-hr">--</span>
+            </div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Total Time</span>
+              <span class="summary-stat__value summary-total-time">--</span>
+            </div>
+            <div class="summary-zones">
+              <div class="summary-zones__title">Time in Zone</div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#9E9E9E"></div>
+                <span class="summary-zone-row__label">Zone 1</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-0" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-0">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#2196F3"></div>
+                <span class="summary-zone-row__label">Zone 2</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-1" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-1">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#4CAF50"></div>
+                <span class="summary-zone-row__label">Zone 3</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-2" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-2">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#FF9800"></div>
+                <span class="summary-zone-row__label">Zone 4</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-3" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-3">0m 00s</span>
+              </div>
+              <div class="summary-zone-row">
+                <div class="summary-zone-row__swatch" style="background:#F44336"></div>
+                <span class="summary-zone-row__label">Zone 5</span>
+                <div class="summary-zone-row__bar-track"><div class="summary-zone-row__bar-fill zone-bar-fill-4" style="width:0%"></div></div>
+                <span class="summary-zone-row__time zone-bar-label-4">0m 00s</span>
+              </div>
+            </div>
+          </div>
+          <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary1"></canvas>
+        </div>
+
+      </div>
+
+      <button class="btn btn-new-session" id="newSessionBtn" type="button">New Session</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

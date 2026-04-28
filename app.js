@@ -21,6 +21,7 @@ function parseHR(dataView) {
 /* ─── State ───────────────────────────────────────────────────────────────── */
 
 const state = {
+  sessionMode: 'duo', // 'solo' | 'duo' — memory only, never localStorage
   users: [
     { name: '', maxHR: 0, device: null, characteristic: null,
       hr: 0, zone: 0, connected: false,
@@ -76,6 +77,19 @@ function saveSummary() {
 
 /* ─── Setup Screen ────────────────────────────────────────────────────────── */
 
+function setSessionMode(mode, startBtn) {
+  state.sessionMode = mode;
+  document.getElementById('setupUser1').hidden = (mode === 'solo');
+  if (mode === 'solo' && state.users[1].connected) {
+    try { state.users[1].device.gatt.disconnect(); } catch (_) {}
+    state.users[1].connected = false;
+    document.getElementById('connect1').textContent = 'Connect Watch';
+    document.getElementById('connect1').classList.remove('connected');
+    setStatus(1, 'Not connected', '');
+  }
+  updateStartButton(startBtn);
+}
+
 function initSetup() {
   // Pre-fill from saved profiles
   [0, 1].forEach(i => {
@@ -88,6 +102,10 @@ function initSetup() {
   });
 
   const startBtn = document.getElementById('startBtn');
+
+  document.querySelectorAll('input[name="sessionMode"]').forEach(radio => {
+    radio.addEventListener('change', () => setSessionMode(radio.value, startBtn));
+  });
 
   [0, 1].forEach(i => {
     document.getElementById('connect' + i)
@@ -180,10 +198,18 @@ function onDisconnectedSetup(index, startBtn) {
 }
 
 function updateStartButton(startBtn) {
-  startBtn.disabled = !(state.users[0].connected && state.users[1].connected);
+  if (state.sessionMode === 'solo') {
+    startBtn.disabled = !state.users[0].connected;
+  } else {
+    startBtn.disabled = !(state.users[0].connected && state.users[1].connected);
+  }
 }
 
 function startWorkout() {
+  // Hard gate — enforce connection requirements regardless of button state
+  if (!state.users[0].connected) return;
+  if (state.sessionMode === 'duo' && !state.users[1].connected) return;
+
   // Capture any last-minute edits to name/maxHR fields
   [0, 1].forEach(i => {
     const nameEl  = document.getElementById('name'  + i);
@@ -229,6 +255,10 @@ function startWorkout() {
       u.device.addEventListener('gattserverdisconnected', () => onDashboardDisconnect(i));
     }
   });
+
+  // Apply solo/duo layout class to dashboard
+  document.getElementById('screen-dashboard')
+    .classList.toggle('solo-mode', state.sessionMode === 'solo');
 
   // Attempt Wake Lock to keep screen on during workout
   if (navigator.wakeLock) {
@@ -373,20 +403,21 @@ function ensureCanvasSize(canvas) {
 function renderUserGraph(canvas, userIndex) {
   if (!canvas || canvas.clientWidth === 0) return;
 
+  const isDashboard = canvas.id === 'graphCanvas0' || canvas.id === 'graphCanvas1';
+
   const dpr = ensureCanvasSize(canvas);
   const ctx = canvas.getContext('2d');
   const W   = canvas.width;
   const H   = canvas.height;
 
-  // Margins (device pixels)
-  const ML = 42 * dpr;  // left  — Y-axis labels
-  const MT = 10 * dpr;  // top
-  const MR =  8 * dpr;  // right
-  const MB =  6 * dpr;  // bottom
-  const PW = W - ML - MR;  // plot width
-  const PH = H - MT - MB;  // plot height
+  // Margins (device pixels) — dashboard gets extra bottom room for X-axis labels
+  const ML = 42 * dpr;
+  const MT = 10 * dpr;
+  const MR =  8 * dpr;
+  const MB = isDashboard ? 22 * dpr : 6 * dpr;
+  const PW = W - ML - MR;
+  const PH = H - MT - MB;
 
-  // BPM → Y (device pixels, plot-relative, then offset by MT)
   function bpmToY(bpm) {
     return MT + PH * (1 - (bpm - GRAPH_BPM_MIN) / (GRAPH_BPM_MAX - GRAPH_BPM_MIN));
   }
@@ -396,12 +427,12 @@ function renderUserGraph(canvas, userIndex) {
   ctx.fillStyle = '#121212';
   ctx.fillRect(0, 0, W, H);
 
-  // Gridlines + Y-axis labels
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth   = 1 * dpr;
-  ctx.fillStyle   = 'rgba(255,255,255,0.35)';
-  ctx.font        = (10 * dpr) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.textAlign   = 'right';
+  // Y-axis gridlines + labels
+  ctx.strokeStyle  = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth    = 1 * dpr;
+  ctx.fillStyle    = 'rgba(255,255,255,0.35)';
+  ctx.font         = (10 * dpr) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.textAlign    = 'right';
   ctx.textBaseline = 'middle';
 
   GRAPH_GRID_BPM.forEach(bpm => {
@@ -413,27 +444,53 @@ function renderUserGraph(canvas, userIndex) {
     ctx.fillText(String(bpm), ML - 5 * dpr, y);
   });
 
-  // No data — axes drawn, stop here
   const history = state.users[userIndex].hrHistory;
   if (history.length < 2) return;
 
-  const t0    = history[0].t;
-  const tSpan = Math.max(history[history.length - 1].t - t0, 1);
-  const maxHR = state.users[userIndex].maxHR || 190;
+  const maxHR  = state.users[userIndex].maxHR || 190;
+  const firstT = history[0].t;
+  const lastT  = history[history.length - 1].t;
 
-  // Time → X (device pixels)
+  // Rolling 3-minute window on dashboard; full session on summary
+  const WINDOW_MS   = 3 * 60 * 1000;
+  const windowStart = isDashboard ? lastT - WINDOW_MS : firstT;
+  const tSpan       = isDashboard ? WINDOW_MS : Math.max(lastT - firstT, 1);
+
   function tToX(t) {
-    return ML + ((t - t0) / tSpan) * PW;
+    return ML + ((t - windowStart) / tSpan) * PW;
   }
 
-  // Draw zone-coloured line — segment per zone run
-  ctx.lineWidth   = 2.5 * dpr;
-  ctx.lineJoin    = 'round';
-  ctx.lineCap     = 'round';
+  // X-axis time labels (dashboard only) — at 0, 1, 2, 3 minute marks
+  if (isDashboard) {
+    ctx.fillStyle    = 'rgba(255,255,255,0.35)';
+    ctx.font         = (9 * dpr) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'top';
+    [0, 1, 2, 3].forEach(min => {
+      const t = windowStart + min * 60000;
+      if (t < firstT) return;
+      const x      = ML + (min / 3) * PW;
+      const elSec  = Math.round((t - firstT) / 1000);
+      const m      = Math.floor(elSec / 60);
+      const s      = elSec % 60;
+      ctx.fillText(m + ':' + String(s).padStart(2, '0'), x, H - MB + 4 * dpr);
+    });
+  }
+
+  // Draw zone-coloured line — only points within the window
+  const visibleHistory = isDashboard
+    ? history.filter(p => p.t >= windowStart)
+    : history;
+
+  if (visibleHistory.length < 2) return;
+
+  ctx.lineWidth = 2.5 * dpr;
+  ctx.lineJoin  = 'round';
+  ctx.lineCap   = 'round';
 
   let currentZone = null;
 
-  history.forEach((p, idx) => {
+  visibleHistory.forEach((p, idx) => {
     const zone = getZone(p.hr, maxHR);
     const x    = tToX(p.t);
     const y    = bpmToY(p.hr);
@@ -447,7 +504,6 @@ function renderUserGraph(canvas, userIndex) {
     }
 
     if (zone !== currentZone) {
-      // Extend current segment to this point (seamless join), then start new colour
       ctx.lineTo(x, y);
       ctx.stroke();
       ctx.beginPath();
@@ -510,7 +566,8 @@ function initNewSession() {
     setStatus(i, 'Not connected', '');
   });
 
-  document.getElementById('startBtn').disabled = true;
+  document.getElementById('modeDuo').checked = true;
+  setSessionMode('duo', document.getElementById('startBtn'));
   showScreen('screen-setup');
 }
 
@@ -521,3 +578,66 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('endBtn').addEventListener('click', endWorkout);
   document.getElementById('newSessionBtn').addEventListener('click', initNewSession);
 });
+
+/* ─── Confetti ────────────────────────────────────────────────────────────── */
+(function () {
+  const PALETTE = ['#BADDCF', '#E8F3DA', '#6787AF', '#19123D', '#B2F332', '#F3EEE8'];
+
+  function startConfetti() {
+    const canvas = document.getElementById('confettiCanvas');
+    if (!canvas) return;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const pieces = Array.from({ length: 130 }, () => ({
+      x:      Math.random() * W,
+      y:      Math.random() * H - H,
+      w:      6 + Math.random() * 10,
+      h:      3 + Math.random() * 6,
+      colour: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+      vx:     (Math.random() - 0.5) * 2,
+      vy:     2.5 + Math.random() * 3,
+      angle:  Math.random() * Math.PI * 2,
+      spin:   (Math.random() - 0.5) * 0.15,
+    }));
+
+    const end = Date.now() + 3000;
+
+    function draw() {
+      const remaining = end - Date.now();
+      if (remaining <= 0) {
+        ctx.clearRect(0, 0, W, H);
+        canvas.style.display = 'none';
+        return;
+      }
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = Math.min(1, remaining / 600);
+      pieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.angle += p.spin;
+        if (p.y > H) { p.y = -p.h; p.x = Math.random() * W; }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.fillStyle = p.colour;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const summaryScreen = document.getElementById('screen-summary');
+    new MutationObserver(() => {
+      if (!summaryScreen.hasAttribute('hidden')) startConfetti();
+    }).observe(summaryScreen, { attributes: true, attributeFilter: ['hidden'] });
+  });
+}());

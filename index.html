@@ -11,11 +11,73 @@
   <!-- ── Setup Screen ─────────────────────────────────────────────────── -->
   <div class="screen" id="screen-setup">
     <div class="setup-screen">
-      <h1>LiveHRZone</h1>
+
+      <!-- Background pill shapes -->
+      <div class="setup-bg" aria-hidden="true">
+        <span class="pill pill--1"></span>
+        <span class="pill pill--2"></span>
+        <span class="pill pill--3"></span>
+        <span class="pill pill--4"></span>
+        <span class="pill pill--5"></span>
+        <span class="pill pill--6"></span>
+        <span class="pill pill--7"></span>
+      </div>
+
+      <!-- Logo -->
+      <div class="setup-logo">LiveHRZone</div>
+
+      <!-- Hero heading -->
+      <svg class="hero-title" viewBox="0 0 1100 200"
+           xmlns="http://www.w3.org/2000/svg" aria-label="HARD WORK">
+        <defs>
+          <clipPath id="heroClip">
+            <text x="550" y="178"
+                  text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900"
+                  font-size="168"
+                  letter-spacing="-4">HARD WORK</text>
+          </clipPath>
+        </defs>
+        <!-- White base letterforms -->
+        <text x="550" y="178"
+              text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900"
+              font-size="168"
+              letter-spacing="-4"
+              fill="white">HARD WORK</text>
+        <!-- Colourful blobs clipped to letterforms -->
+        <g clip-path="url(#heroClip)">
+          <ellipse cx="60"  cy="100" rx="200" ry="140" fill="#B2F332"/>
+          <ellipse cx="260" cy="110" rx="190" ry="130" fill="#6787AF"/>
+          <ellipse cx="450" cy="90"  rx="180" ry="150" fill="#BADDCF"/>
+          <ellipse cx="640" cy="110" rx="200" ry="130" fill="#E8F3DA"/>
+          <ellipse cx="840" cy="90"  rx="190" ry="140" fill="#19123D"/>
+          <ellipse cx="1040" cy="105" rx="190" ry="130" fill="#B2F332"/>
+          <ellipse cx="160" cy="130" rx="160" ry="100" fill="#E8F3DA"/>
+          <ellipse cx="360" cy="75"  rx="150" ry="110" fill="#B2F332"/>
+          <ellipse cx="560" cy="130" rx="160" ry="90"  fill="#6787AF"/>
+          <ellipse cx="760" cy="70"  rx="150" ry="120" fill="#BADDCF"/>
+          <ellipse cx="960" cy="130" rx="160" ry="100" fill="#F3EEE8"/>
+        </g>
+      </svg>
+
+      <!-- Session mode selector -->
+      <div class="mode-selector">
+        <label class="mode-label">
+          <input type="radio" name="sessionMode" id="modeSolo" value="solo">
+          Solo Session
+        </label>
+        <label class="mode-label">
+          <input type="radio" name="sessionMode" id="modeDuo" value="duo" checked>
+          Duo Session
+        </label>
+      </div>
 
       <div class="setup-users">
         <!-- User 0 -->
-        <div class="setup-user">
+        <div class="setup-user" id="setupUser0">
           <h2>Athlete 1</h2>
           <div class="field">
             <label for="name0">Name</label>
@@ -30,7 +92,7 @@
         </div>
 
         <!-- User 1 -->
-        <div class="setup-user">
+        <div class="setup-user" id="setupUser1">
           <h2>Athlete 2</h2>
           <div class="field">
             <label for="name1">Name</label>
@@ -52,6 +114,48 @@
   <!-- ── Dashboard Screen ─────────────────────────────────────────────── -->
   <div class="screen" id="screen-dashboard" hidden>
     <div class="dashboard-screen">
+
+      <!-- Background pill shapes -->
+      <div class="dash-bg" aria-hidden="true">
+        <span class="pill pill--1"></span>
+        <span class="pill pill--2"></span>
+        <span class="pill pill--3"></span>
+        <span class="pill pill--4"></span>
+        <span class="pill pill--5"></span>
+        <span class="pill pill--6"></span>
+        <span class="pill pill--7"></span>
+        <span class="pill pill--8"></span>
+        <span class="pill pill--9"></span>
+        <span class="pill pill--10"></span>
+      </div>
+
+      <!-- Hero heading -->
+      <svg class="dash-hero" viewBox="0 0 980 175"
+           xmlns="http://www.w3.org/2000/svg" aria-label="WORKING!">
+        <defs>
+          <clipPath id="dashHeroClip">
+            <text x="490" y="158" text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900" font-size="148" letter-spacing="-3">WORKING!</text>
+          </clipPath>
+        </defs>
+        <text x="490" y="158" text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900" font-size="148" letter-spacing="-3"
+              fill="white">WORKING!</text>
+        <g clip-path="url(#dashHeroClip)">
+          <ellipse cx="100" cy="88"  rx="190" ry="130" fill="#B2F332"/>
+          <ellipse cx="310" cy="98"  rx="180" ry="120" fill="#6787AF"/>
+          <ellipse cx="510" cy="80"  rx="190" ry="130" fill="#BADDCF"/>
+          <ellipse cx="720" cy="95"  rx="180" ry="120" fill="#E8F3DA"/>
+          <ellipse cx="900" cy="85"  rx="170" ry="125" fill="#19123D"/>
+          <ellipse cx="200" cy="115" rx="150" ry="90"  fill="#E8F3DA"/>
+          <ellipse cx="430" cy="60"  rx="160" ry="100" fill="#B2F332"/>
+          <ellipse cx="650" cy="120" rx="150" ry="90"  fill="#6787AF"/>
+          <ellipse cx="870" cy="115" rx="150" ry="90"  fill="#F3EEE8"/>
+        </g>
+      </svg>
+
       <div class="user-panels">
 
         <!-- User 0 panel -->
@@ -108,7 +212,67 @@
   <!-- ── Summary Screen ───────────────────────────────────────────────── -->
   <div class="screen" id="screen-summary" hidden>
     <div class="summary-screen">
-      <h1>Session Summary</h1>
+
+      <!-- Background pill shapes -->
+      <div class="summary-bg" aria-hidden="true">
+        <span class="pill pill--1"></span>
+        <span class="pill pill--2"></span>
+        <span class="pill pill--3"></span>
+        <span class="pill pill--4"></span>
+        <span class="pill pill--5"></span>
+        <span class="pill pill--6"></span>
+        <span class="pill pill--7"></span>
+        <span class="pill pill--8"></span>
+        <span class="pill pill--9"></span>
+        <span class="pill pill--10"></span>
+        <span class="pill pill--11"></span>
+        <span class="pill pill--12"></span>
+        <span class="pill pill--13"></span>
+        <span class="pill pill--14"></span>
+      </div>
+
+      <!-- Hero heading (replaces <h1>Session Summary</h1>) -->
+      <svg class="summary-hero" viewBox="0 0 1000 340"
+           xmlns="http://www.w3.org/2000/svg" aria-label="WORKOUT COMPLETE">
+        <defs>
+          <clipPath id="summaryHeroClip">
+            <text x="500" y="155" text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900" font-size="145" letter-spacing="-3">WORKOUT</text>
+            <text x="500" y="325" text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900" font-size="145" letter-spacing="-3">COMPLETE</text>
+          </clipPath>
+        </defs>
+        <text x="500" y="155" text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900" font-size="145" letter-spacing="-3"
+              fill="white">WORKOUT</text>
+        <text x="500" y="325" text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900" font-size="145" letter-spacing="-3"
+              fill="white">COMPLETE</text>
+        <g clip-path="url(#summaryHeroClip)">
+          <ellipse cx="80"  cy="85"  rx="200" ry="130" fill="#B2F332"/>
+          <ellipse cx="290" cy="95"  rx="185" ry="120" fill="#6787AF"/>
+          <ellipse cx="500" cy="75"  rx="195" ry="135" fill="#BADDCF"/>
+          <ellipse cx="720" cy="90"  rx="185" ry="120" fill="#E8F3DA"/>
+          <ellipse cx="930" cy="80"  rx="180" ry="125" fill="#19123D"/>
+          <ellipse cx="80"  cy="255" rx="200" ry="130" fill="#6787AF"/>
+          <ellipse cx="290" cy="265" rx="185" ry="120" fill="#B2F332"/>
+          <ellipse cx="500" cy="248" rx="195" ry="135" fill="#F3EEE8"/>
+          <ellipse cx="720" cy="262" rx="185" ry="120" fill="#BADDCF"/>
+          <ellipse cx="930" cy="252" rx="180" ry="125" fill="#B2F332"/>
+          <ellipse cx="190" cy="130" rx="160" ry="100" fill="#E8F3DA"/>
+          <ellipse cx="420" cy="120" rx="155" ry="110" fill="#B2F332"/>
+          <ellipse cx="640" cy="130" rx="155" ry="100" fill="#6787AF"/>
+          <ellipse cx="840" cy="120" rx="150" ry="110" fill="#BADDCF"/>
+          <ellipse cx="190" cy="300" rx="160" ry="100" fill="#19123D"/>
+          <ellipse cx="420" cy="290" rx="155" ry="110" fill="#BADDCF"/>
+          <ellipse cx="640" cy="300" rx="155" ry="100" fill="#B2F332"/>
+          <ellipse cx="840" cy="290" rx="150" ry="110" fill="#E8F3DA"/>
+        </g>
+      </svg>
 
       <div class="summary-panels">
 
@@ -215,6 +379,8 @@
       <button class="btn btn-new-session" id="newSessionBtn" type="button">New Session</button>
     </div>
   </div>
+
+  <canvas id="confettiCanvas" aria-hidden="true"></canvas>
 
   <script src="app.js"></script>
 </body>

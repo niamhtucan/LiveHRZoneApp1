@@ -37,15 +37,62 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 32px 20px;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 20px 48px;
   gap: 32px;
 }
 
-.setup-screen h1 {
-  font-size: 28px;
+/* ─── Background Pills ────────────────────────────────────────────────────── */
+.setup-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pill {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.pill--1 { width: 130px; height: 320px; background: #B2F332; top: -60px;  left: -20px;  transform: rotate(-25deg); }
+.pill--2 { width: 110px; height: 280px; background: #6787AF; top: -40px;  right: 80px;  transform: rotate(20deg);  }
+.pill--3 { width: 140px; height: 350px; background: #BADDCF; bottom: -80px; left: 60px;  transform: rotate(30deg);  }
+.pill--4 { width: 120px; height: 300px; background: #19123D; bottom: -60px; right: -30px; transform: rotate(-15deg); }
+.pill--5 { width: 100px; height: 260px; background: #E8F3DA; top: 30%;    left: -50px;  transform: rotate(50deg);  }
+.pill--6 { width: 110px; height: 280px; background: #F3EEE8; top: 20%;    right: -30px; transform: rotate(-40deg); }
+.pill--7  { width:  90px; height: 240px; background: #B2F332; bottom: 12%; left: 42%;    transform: rotate(70deg);  }
+.pill--8  { width:  85px; height: 210px; background: #F3EEE8; top: -30px;  left: -10px; transform: rotate(10deg);  }
+.pill--9  { width:  90px; height: 225px; background: #B2F332; top: 35%;    right: -20px; transform: rotate(-35deg); }
+.pill--10 { width:  80px; height: 200px; background: #BADDCF; bottom: -40px; left: 52%;  transform: rotate(20deg);  }
+.pill--11 { width:  75px; height: 190px; background: #19123D; top: 15%;    left: 22%;   transform: rotate(55deg);  }
+.pill--12 { width:  95px; height: 240px; background: #6787AF; bottom: 15%; left: 28%;   transform: rotate(-20deg); }
+.pill--13 { width:  70px; height: 180px; background: #E8F3DA; top: 55%;    right: 22%;  transform: rotate(40deg);  }
+.pill--14 { width: 100px; height: 250px; background: #B2F332; top: 68%;    left: 45%;   transform: rotate(-60deg); }
+
+/* ─── Setup Logo ──────────────────────────────────────────────────────────── */
+.setup-logo {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+/* ─── Hero Title SVG ──────────────────────────────────────────────────────── */
+.hero-title {
+  width: 100%;
+  max-width: 860px;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .setup-users {
@@ -54,6 +101,8 @@ html, body {
   gap: 24px;
   width: 100%;
   max-width: 480px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 640px) {
@@ -135,12 +184,54 @@ html, body {
   padding: 18px 32px;
   max-width: 480px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .btn-start:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+/* ─── Session Mode Selector ───────────────────────────────────────────────── */
+.mode-selector {
+  display: flex;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  padding: 4px;
+  position: relative;
+  z-index: 3;
+}
+
+.mode-label {
+  border-radius: 999px;
+  padding: 10px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+}
+
+.mode-label input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.mode-label:has(input:checked) {
+  background: #fff;
+  color: #121212;
+}
+
+/* ─── Solo Dashboard Layout ───────────────────────────────────────────────── */
+#screen-dashboard.solo-mode .user-panel:last-child { display: none; }
+#screen-dashboard.solo-mode .user-panels           { justify-content: center; }
+#screen-dashboard.solo-mode .user-panel            { max-width: 640px; }
 
 .btn-end {
   background: #333;
@@ -156,6 +247,8 @@ html, body {
   font-size: 18px;
   padding: 18px 40px;
   width: auto;
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Status & Error Text ─────────────────────────────────────────────────── */
@@ -177,6 +270,25 @@ html, body {
   height: 100vh;
   padding: 16px;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dash-hero {
+  width: 100%;
+  height: 51px;
+  display: block;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .user-panels {
@@ -185,6 +297,8 @@ html, body {
   gap: 16px;
   flex: 1;
   min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .user-panel {
@@ -195,7 +309,7 @@ html, body {
   min-height: 0;
 }
 
-.user-panel .tile { flex: 1; }
+.user-panel .tile { flex: none; height: 230px; }
 
 @media (orientation: portrait) {
   .user-panels { flex-direction: column; }
@@ -256,7 +370,7 @@ html, body {
 }
 
 .tile__pct {
-  font-size: clamp(72px, 11vw, 110px);
+  font-size: 80px;
   font-weight: 800;
   color: #fff;
   line-height: 1;
@@ -324,6 +438,8 @@ html, body {
   justify-content: center;
   padding-bottom: 8px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Summary Screen ──────────────────────────────────────────────────────── */
@@ -334,6 +450,25 @@ html, body {
   align-items: center;
   padding: 32px 20px;
   gap: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.summary-hero {
+  width: 100%;
+  max-width: 430px;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .summary-screen h1 {
@@ -347,6 +482,8 @@ html, body {
   gap: 20px;
   width: 100%;
   max-width: 1040px;
+  position: relative;
+  z-index: 1;
 }
 
 .summary-panel {
@@ -464,4 +601,13 @@ html, body {
 
 .graph-canvas--summary {
   height: 160px;
+}
+
+/* ─── Confetti Canvas ─────────────────────────────────────────────────────── */
+#confettiCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  display: none;
 }

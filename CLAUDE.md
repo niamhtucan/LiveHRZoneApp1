@@ -96,6 +96,14 @@ ratio = currentHR / maxHR
 - Use inline error messages in the UI — never `alert()`
 - BLE Heart Rate Service UUID: `0x180D` / characteristic: `0x2A37`
 
+## Session Mode
+`state.sessionMode` — `'duo'` (default) or `'solo'`. Memory-only, never written to localStorage.
+
+- **Duo**: both users must connect before "Start Session" enables. Dashboard shows two tiles side by side.
+- **Solo**: only User 0's setup card is shown. "Start Session" enables when User 0 connects. Dashboard adds `solo-mode` CSS class — hides User 1 panel, centres User 0 panel (`max-width: 640px`).
+
+`setSessionMode(mode, startBtn)` handles all UI side-effects: toggling `.mode-btn--active`, hiding/showing `#setupUser1`, disconnecting User 1 if switching to solo mid-connect, calling `updateStartButton()`. `initNewSession()` resets mode to `'duo'`.
+
 ## Mistakes to Avoid
 - Bad: assuming HR is always a single byte. Always check flags byte bit 0 first.
 - Bad: zone background set via `style.backgroundColor` on every HR tick. Zone class is swapped only when zone number changes.

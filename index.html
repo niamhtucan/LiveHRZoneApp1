@@ -87,6 +87,10 @@
             <label for="maxhr0">Max Heart Rate</label>
             <input type="number" id="maxhr0" placeholder="e.g. 190" min="100" max="220">
           </div>
+          <div class="field">
+            <label for="weight0">Body Weight (kg)</label>
+            <input type="number" id="weight0" placeholder="e.g. 70" min="30" max="200">
+          </div>
           <button class="btn btn-connect" id="connect0" type="button">Connect Watch</button>
           <p class="status" id="status0">Not connected</p>
         </div>
@@ -101,6 +105,10 @@
           <div class="field">
             <label for="maxhr1">Max Heart Rate</label>
             <input type="number" id="maxhr1" placeholder="e.g. 185" min="100" max="220">
+          </div>
+          <div class="field">
+            <label for="weight1">Body Weight (kg)</label>
+            <input type="number" id="weight1" placeholder="e.g. 70" min="30" max="200">
           </div>
           <button class="btn btn-connect" id="connect1" type="button">Connect Watch</button>
           <p class="status" id="status1">Not connected</p>
@@ -285,8 +293,16 @@
               <span class="summary-stat__value summary-avg-hr">--</span>
             </div>
             <div class="summary-stat">
+              <span class="summary-stat__label">Peak Heart Rate</span>
+              <span class="summary-stat__value summary-max-hr">--</span>
+            </div>
+            <div class="summary-stat">
               <span class="summary-stat__label">Total Time</span>
               <span class="summary-stat__value summary-total-time">--</span>
+            </div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Est. Calories</span>
+              <span class="summary-stat__value summary-calories">--</span>
             </div>
             <div class="summary-zones">
               <div class="summary-zones__title">Time in Zone</div>
@@ -334,8 +350,16 @@
               <span class="summary-stat__value summary-avg-hr">--</span>
             </div>
             <div class="summary-stat">
+              <span class="summary-stat__label">Peak Heart Rate</span>
+              <span class="summary-stat__value summary-max-hr">--</span>
+            </div>
+            <div class="summary-stat">
               <span class="summary-stat__label">Total Time</span>
               <span class="summary-stat__value summary-total-time">--</span>
+            </div>
+            <div class="summary-stat">
+              <span class="summary-stat__label">Est. Calories</span>
+              <span class="summary-stat__value summary-calories">--</span>
             </div>
             <div class="summary-zones">
               <div class="summary-zones__title">Time in Zone</div>
@@ -375,6 +399,9 @@
         </div>
 
       </div>
+
+      <!-- Awards row — populated by renderAwards() -->
+      <div class="awards-section" id="awardsSection" hidden></div>
 
       <button class="btn btn-new-session" id="newSessionBtn" type="button">New Session</button>
     </div>

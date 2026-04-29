@@ -603,6 +603,98 @@ html, body {
   height: 160px;
 }
 
+/* ─── Awards Section ──────────────────────────────────────────────────────── */
+.awards-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+  max-width: 680px;
+  position: relative;
+  z-index: 1;
+}
+
+.award-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 150px;
+}
+
+/*
+  Border pattern: .award-badge__border has accent bg + shape,
+  .award-badge__inner sits inside with dark bg + same shape, inset by 3px.
+  This makes clip-path + visible border work on all shape types.
+*/
+.award-badge__border {
+  width: 110px;
+  height: 110px;
+  background: var(--accent, #FF9800);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.award-badge__inner {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  background: #19123D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #FF9800);
+}
+
+.award-badge__inner svg {
+  width: 46px;
+  height: 46px;
+}
+
+/* Circle — Cool Down Champion */
+.award-badge--circle .award-badge__border { border-radius: 50%; }
+.award-badge--circle .award-badge__inner  { border-radius: 50%; }
+
+/* Shield — Range Ruler: pentagon with pointed bottom */
+.award-badge--shield .award-badge__border {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 68%, 50% 100%, 0% 68%);
+}
+.award-badge--shield .award-badge__inner {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 68%, 50% 100%, 0% 68%);
+}
+
+/* Pennant — Max Calorie: bookmark/ribbon shape */
+.award-badge--pennant .award-badge__border {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 82%, 0% 100%);
+}
+.award-badge--pennant .award-badge__inner {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 82%, 0% 100%);
+}
+
+.award-badge__desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.award-badge__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.award-badge__winner {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent, #FF9800);
+  text-align: center;
+}
+
 /* ─── Confetti Canvas ─────────────────────────────────────────────────────── */
 #confettiCanvas {
   position: fixed;

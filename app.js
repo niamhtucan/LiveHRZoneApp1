@@ -23,11 +23,11 @@ function parseHR(dataView) {
 const state = {
   sessionMode: 'duo', // 'solo' | 'duo' — memory only, never localStorage
   users: [
-    { name: '', maxHR: 0, device: null, characteristic: null,
+    { name: '', maxHR: 0, weight: 70, device: null, characteristic: null,
       hr: 0, zone: 0, connected: false,
       hrSum: 0, hrCount: 0, zoneTime: [0, 0, 0, 0, 0], lastUpdateAt: null,
       hrHistory: [] },
-    { name: '', maxHR: 0, device: null, characteristic: null,
+    { name: '', maxHR: 0, weight: 70, device: null, characteristic: null,
       hr: 0, zone: 0, connected: false,
       hrSum: 0, hrCount: 0, zoneTime: [0, 0, 0, 0, 0], lastUpdateAt: null,
       hrHistory: [] },
@@ -50,6 +50,7 @@ function saveProfile(index) {
     localStorage.setItem('user' + index + 'Profile', JSON.stringify({
       name:     u.name,
       maxHR:    u.maxHR,
+      weight:   u.weight,
       deviceId: u.device ? u.device.id : null,
     }));
   } catch (_) {}
@@ -95,10 +96,12 @@ function initSetup() {
   [0, 1].forEach(i => {
     const p = loadProfile(i);
     if (!p) return;
-    const nameEl  = document.getElementById('name'  + i);
-    const maxHREl = document.getElementById('maxhr' + i);
-    if (nameEl  && p.name)  nameEl.value  = p.name;
-    if (maxHREl && p.maxHR) maxHREl.value = p.maxHR;
+    const nameEl   = document.getElementById('name'   + i);
+    const maxHREl  = document.getElementById('maxhr'  + i);
+    const weightEl = document.getElementById('weight' + i);
+    if (nameEl   && p.name)   nameEl.value   = p.name;
+    if (maxHREl  && p.maxHR)  maxHREl.value  = p.maxHR;
+    if (weightEl && p.weight) weightEl.value = p.weight;
   });
 
   const startBtn = document.getElementById('startBtn');
@@ -122,12 +125,15 @@ function setStatus(index, text, type) {
 }
 
 async function connectDevice(index, startBtn) {
-  const nameEl  = document.getElementById('name'  + index);
-  const maxHREl = document.getElementById('maxhr' + index);
-  const btn     = document.getElementById('connect' + index);
+  const nameEl   = document.getElementById('name'   + index);
+  const maxHREl  = document.getElementById('maxhr'  + index);
+  const weightEl = document.getElementById('weight' + index);
+  const btn      = document.getElementById('connect' + index);
 
-  const name  = nameEl.value.trim() || 'Athlete ' + (index + 1);
-  const maxHR = parseInt(maxHREl.value, 10);
+  const name   = nameEl.value.trim() || 'Athlete ' + (index + 1);
+  const maxHR  = parseInt(maxHREl.value, 10);
+  const wVal   = parseInt(weightEl.value, 10);
+  const weight = (wVal >= 30 && wVal <= 200) ? wVal : 70;
 
   if (!maxHR || maxHR < 100 || maxHR > 220) {
     setStatus(index, 'Enter a valid max HR (100–220).', 'error');
@@ -139,8 +145,9 @@ async function connectDevice(index, startBtn) {
     return;
   }
 
-  state.users[index].name  = name;
-  state.users[index].maxHR = maxHR;
+  state.users[index].name   = name;
+  state.users[index].maxHR  = maxHR;
+  state.users[index].weight = weight;
 
   setStatus(index, 'Opening Bluetooth picker…', 'connecting');
   btn.disabled = true;
@@ -212,10 +219,13 @@ function startWorkout() {
 
   // Capture any last-minute edits to name/maxHR fields
   [0, 1].forEach(i => {
-    const nameEl  = document.getElementById('name'  + i);
-    const maxHREl = document.getElementById('maxhr' + i);
+    const nameEl   = document.getElementById('name'   + i);
+    const maxHREl  = document.getElementById('maxhr'  + i);
+    const weightEl = document.getElementById('weight' + i);
     if (nameEl.value.trim())  state.users[i].name  = nameEl.value.trim();
     if (maxHREl.value)        state.users[i].maxHR = parseInt(maxHREl.value, 10);
+    const wVal = parseInt(weightEl.value, 10);
+    if (wVal >= 30 && wVal <= 200) state.users[i].weight = wVal;
     saveProfile(i);
   });
 
@@ -517,6 +527,169 @@ function renderUserGraph(canvas, userIndex) {
   ctx.stroke();
 }
 
+/* ─── Calorie + Award Calculations ───────────────────────────────────────── */
+
+const ZONE_METS = [3.0, 5.0, 7.0, 9.0, 11.0];
+
+function estimateCalories(user) {
+  const kg = (user.weight >= 30 && user.weight <= 200) ? user.weight : 70;
+  return Math.round(
+    user.zoneTime.reduce((sum, ms, z) => sum + (ms / 60000) * ZONE_METS[z] * kg / 60, 0)
+  );
+}
+
+function computeAwards(users) {
+  const awards = [];
+  const isSolo = state.sessionMode === 'solo';
+
+  // ── Cool Down Champion ──────────────────────────────────────────────────
+  function recoveryTimes(u) {
+    const times = [];
+    let lastZ3t = null;
+    u.hrHistory.forEach(p => {
+      const z = getZone(p.hr, u.maxHR);
+      if (z >= 3) {
+        lastZ3t = p.t;
+      } else if (z === 1 && lastZ3t !== null) {
+        times.push(p.t - lastZ3t);
+        lastZ3t = null;
+      }
+    });
+    return times;
+  }
+
+  const rt0 = recoveryTimes(users[0]);
+  const rt1 = isSolo ? [] : recoveryTimes(users[1]);
+  const avg0 = rt0.length >= 2 ? rt0.reduce((a, b) => a + b, 0) / rt0.length : Infinity;
+  const avg1 = rt1.length >= 2 ? rt1.reduce((a, b) => a + b, 0) / rt1.length : Infinity;
+
+  if (avg0 !== Infinity || avg1 !== Infinity) {
+    let winner, desc;
+    const diff = Math.abs(avg0 - avg1);
+    if (isSolo || avg1 === Infinity) {
+      winner = users[0].name;
+      desc   = 'Avg recovery: ' + formatMinSec(avg0);
+    } else if (avg0 === Infinity) {
+      winner = users[1].name;
+      desc   = 'Avg recovery: ' + formatMinSec(avg1);
+    } else if (diff <= 5000) {
+      winner = users[0].name + ' & ' + users[1].name;
+      desc   = 'Tied — ' + formatMinSec(Math.min(avg0, avg1));
+    } else {
+      const w = avg0 < avg1 ? users[0] : users[1];
+      winner = w.name;
+      desc   = 'Avg recovery: ' + formatMinSec(Math.min(avg0, avg1));
+    }
+    awards.push({ id: 'cooldown', title: 'Cool Down Champion', winner, desc });
+  }
+
+  // ── Range Ruler ─────────────────────────────────────────────────────────
+  function hrRange(u) {
+    if (!state.sessionStart || u.hrHistory.length < 2) return null;
+    const rangeStart = state.sessionStart + 5 * 60 * 1000;
+    const rangeEnd   = u.hrHistory[u.hrHistory.length - 1].t - 5 * 60 * 1000;
+    const trimmed    = u.hrHistory.filter(p => p.t >= rangeStart && p.t <= rangeEnd);
+    if (trimmed.length < 2) return null;
+    return Math.max(...trimmed.map(p => p.hr)) - Math.min(...trimmed.map(p => p.hr));
+  }
+
+  const range0 = hrRange(users[0]);
+  const range1 = isSolo ? null : hrRange(users[1]);
+
+  if (range0 !== null || range1 !== null) {
+    let winner, desc;
+    if (isSolo || range1 === null) {
+      winner = users[0].name;
+      desc   = 'HR range: ' + (range0 ?? range1) + ' bpm';
+    } else if (range0 === null) {
+      winner = users[1].name;
+      desc   = 'HR range: ' + range1 + ' bpm';
+    } else if (range0 === range1) {
+      winner = users[0].name + ' & ' + users[1].name;
+      desc   = 'Tied — ' + range0 + ' bpm range';
+    } else {
+      const w = range0 > range1 ? users[0] : users[1];
+      winner = w.name;
+      desc   = 'HR range: ' + Math.max(range0, range1) + ' bpm';
+    }
+    awards.push({ id: 'range', title: 'Range Ruler', winner, desc });
+  }
+
+  // ── Max Calorie ──────────────────────────────────────────────────────────
+  const cal0 = users[0].hrCount > 0 ? estimateCalories(users[0]) : null;
+  const cal1 = (!isSolo && users[1].hrCount > 0) ? estimateCalories(users[1]) : null;
+
+  if (cal0 !== null || cal1 !== null) {
+    let winner, desc;
+    if (isSolo || cal1 === null) {
+      winner = users[0].name;
+      desc   = (cal0 ?? cal1) + ' kcal';
+    } else if (cal0 === null) {
+      winner = users[1].name;
+      desc   = cal1 + ' kcal';
+    } else if (Math.abs(cal0 - cal1) <= 10) {
+      winner = users[0].name + ' & ' + users[1].name;
+      desc   = 'Tied — ' + Math.max(cal0, cal1) + ' kcal';
+    } else {
+      const w = cal0 > cal1 ? users[0] : users[1];
+      winner = w.name;
+      desc   = Math.max(cal0, cal1) + ' kcal';
+    }
+    awards.push({ id: 'calorie', title: 'Max Calorie', winner, desc });
+  }
+
+  return awards;
+}
+
+const AWARD_ICONS = {
+  cooldown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+    <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+  </svg>`,
+  range: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="3" x2="12" y2="21"/>
+    <polyline points="7 8 12 3 17 8"/><polyline points="7 16 12 21 17 16"/>
+    <line x1="7" y1="12" x2="17" y2="12"/>
+  </svg>`,
+  calorie: `<svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C9.5 5.5 7 8 7 12a5 5 0 0 0 10 0c0-1.8-.7-3.4-1.8-5C14.5 8.8 13 10 12 10c0-2.5 1-5 0-8z"/>
+  </svg>`,
+};
+
+const AWARD_SHAPES = {
+  cooldown: 'circle',
+  range:    'shield',
+  calorie:  'pennant',
+};
+
+const AWARD_ACCENTS = {
+  cooldown: '#6787AF',
+  range:    '#BADDCF',
+  calorie:  '#B2F332',
+};
+
+function renderAwards(awards) {
+  const section = document.getElementById('awardsSection');
+  if (!awards.length) { section.hidden = true; return; }
+
+  section.innerHTML = awards.map(a => {
+    const shape  = AWARD_SHAPES[a.id];
+    const accent = AWARD_ACCENTS[a.id];
+    const icon   = AWARD_ICONS[a.id];
+    return `<div class="award-badge award-badge--${shape}" style="--accent:${accent}">
+      <div class="award-badge__border">
+        <div class="award-badge__inner">${icon}</div>
+      </div>
+      <div class="award-badge__desc">${a.desc}</div>
+      <div class="award-badge__title">${a.title}</div>
+      <div class="award-badge__winner">${a.winner}</div>
+    </div>`;
+  }).join('');
+
+  section.hidden = false;
+}
+
 /* ─── Summary Screen ──────────────────────────────────────────────────────── */
 
 function formatMinSec(ms) {
@@ -531,8 +704,12 @@ function renderSummary() {
     const card = document.getElementById('summaryCard' + i);
 
     card.querySelector('.summary-card__name').textContent  = u.name || 'Athlete ' + (i + 1);
-    card.querySelector('.summary-avg-hr').textContent      = u.hrCount > 0 ? u.hrCount && Math.round(u.hrSum / u.hrCount) + ' bpm' : '--';
+    card.querySelector('.summary-avg-hr').textContent      = u.hrCount > 0 ? Math.round(u.hrSum / u.hrCount) + ' bpm' : '--';
     card.querySelector('.summary-total-time').textContent  = formatMinSec(u.zoneTime.reduce((a, b) => a + b, 0));
+
+    const peakHR = u.hrHistory.length > 0 ? Math.max(...u.hrHistory.map(p => p.hr)) : null;
+    card.querySelector('.summary-max-hr').textContent      = peakHR !== null ? peakHR + ' bpm' : '--';
+    card.querySelector('.summary-calories').textContent    = u.hrCount > 0 ? estimateCalories(u) + ' kcal' : '--';
 
     const maxZoneMs = Math.max(...u.zoneTime, 1);
     u.zoneTime.forEach((ms, z) => {
@@ -547,6 +724,8 @@ function renderSummary() {
   // Render per-user summary graphs from full session history
   renderUserGraph(document.getElementById('graphCanvasSummary0'), 0);
   renderUserGraph(document.getElementById('graphCanvasSummary1'), 1);
+
+  renderAwards(computeAwards(state.users));
 }
 
 function initNewSession() {

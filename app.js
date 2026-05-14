@@ -357,8 +357,8 @@ async function connectDevice(index, startBtn) {
     return;
   }
 
-  if (!navigator.bluetooth) {
-    setStatus(index, 'Web Bluetooth not available. Use Chrome on macOS.', 'error');
+  if (!navigator.bluetooth || typeof navigator.bluetooth.requestDevice !== 'function') {
+    setStatus(index, 'Web Bluetooth not supported. Use Chrome on desktop or Bluefy on iOS.', 'error');
     return;
   }
 
@@ -408,7 +408,8 @@ async function connectDevice(index, startBtn) {
     if (err.name === 'NotFoundError' || err.name === 'AbortError') {
       setStatus(index, 'No device selected.', '');
     } else {
-      setStatus(index, 'Error: ' + err.message, 'error');
+      const msg = err.message || err.name || 'Connection failed';
+      setStatus(index, 'Error: ' + msg, 'error');
     }
   }
 }

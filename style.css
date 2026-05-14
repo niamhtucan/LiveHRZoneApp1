@@ -212,6 +212,8 @@ html, body {
 .setup-card-dot.active { background: #B2F332; }
 
 .setup-user {
+  position: relative;
+  z-index: 1;
   background: var(--card-bg);
   border-radius: var(--radius-card);
   padding: 24px;
@@ -404,6 +406,8 @@ html, body {
 }
 
 .mode-card {
+  position: relative;
+  z-index: 1;
   background: var(--card-bg);
   border-radius: var(--radius-card);
   padding: 28px 20px;
@@ -414,7 +418,6 @@ html, body {
   cursor: pointer;
   border: 2px solid transparent;
   transition: border-color 0.2s;
-  position: relative;
   user-select: none;
 }
 

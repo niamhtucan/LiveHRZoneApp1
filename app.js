@@ -236,20 +236,33 @@ function showSetupCard(index) {
 function setupSwipe() {
   const viewport = document.getElementById('setupCardViewport');
   if (!viewport) return;
-  let startX = 0;
+
+  let startX = 0, startY = 0, tracking = false;
 
   viewport.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
+    startX   = e.touches[0].clientX;
+    startY   = e.touches[0].clientY;
+    tracking = true;
   }, { passive: true });
 
+  // Non-passive so we can preventDefault for horizontal swipes,
+  // preventing the browser from claiming the gesture as a page scroll.
+  viewport.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dx > dy && dx > 8) e.preventDefault();
+  }, { passive: false });
+
   viewport.addEventListener('touchend', e => {
-    if (state.sessionMode === 'solo') return;
+    if (!tracking || state.sessionMode === 'solo') { tracking = false; return; }
+    tracking = false;
     const delta = e.changedTouches[0].clientX - startX;
     const track = document.getElementById('setupCardTrack');
     if (!track) return;
     const current = track.style.transform === 'translateX(-100%)' ? 1 : 0;
-    if (delta < -50 && current === 0) showSetupCard(1);
-    if (delta >  50 && current === 1) showSetupCard(0);
+    if (delta < -30 && current === 0) showSetupCard(1);
+    if (delta >  30 && current === 1) showSetupCard(0);
   }, { passive: true });
 
   document.querySelectorAll('.setup-card-dot').forEach((dot, i) => {

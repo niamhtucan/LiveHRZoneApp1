@@ -727,7 +727,42 @@ html, body {
   font-weight: 700;
 }
 
-.summary-panels {
+/* ─── Summary Card Viewport (swipe on mobile, static on desktop) ──────────── */
+.summary-card-viewport {
+  width: 100%;
+  max-width: 1040px;
+  position: relative;
+  z-index: 1;
+}
+
+.summary-card-track {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.summary-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Dot pagination — hidden on desktop */
+.summary-card-dots {
+  display: none;
+  gap: 8px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Graphs row — mirrors card layout */
+.summary-graphs {
   display: flex;
   flex-direction: row;
   gap: 20px;
@@ -737,15 +772,23 @@ html, body {
   z-index: 1;
 }
 
-.summary-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.summary-graphs .graph-canvas--summary { flex: 1; }
 
 @media (max-width: 640px) {
-  .summary-panels { flex-direction: column; }
+  .summary-card-viewport {
+    overflow: hidden;
+    max-width: 480px;
+  }
+  .summary-card-track { gap: 0; }
+  .summary-panel {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+  .summary-card-dots { display: flex; }
+  .summary-graphs {
+    flex-direction: column;
+    max-width: 480px;
+  }
 }
 
 .summary-card {

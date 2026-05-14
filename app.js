@@ -233,44 +233,59 @@ function showSetupCard(index) {
   );
 }
 
-function setupSwipe() {
-  const viewport = document.getElementById('setupCardViewport');
-  if (!viewport) return;
-
+// Generic swipe engine — shared by setup and summary screens.
+// Returns a showCard(index) function for programmatic navigation.
+function createSwipe(viewportEl, trackEl, dotSelector, canSwipe) {
   let startX = 0, startY = 0, tracking = false;
 
-  viewport.addEventListener('touchstart', e => {
+  function showCard(index) {
+    trackEl.style.transform = 'translateX(-' + (index * 100) + '%)';
+    document.querySelectorAll(dotSelector).forEach((d, i) =>
+      d.classList.toggle('active', i === index)
+    );
+  }
+
+  viewportEl.addEventListener('touchstart', e => {
     startX   = e.touches[0].clientX;
     startY   = e.touches[0].clientY;
     tracking = true;
   }, { passive: true });
 
-  // Non-passive so we can preventDefault for horizontal swipes,
-  // preventing the browser from claiming the gesture as a page scroll.
-  viewport.addEventListener('touchmove', e => {
+  viewportEl.addEventListener('touchmove', e => {
     if (!tracking) return;
     const dx = Math.abs(e.touches[0].clientX - startX);
     const dy = Math.abs(e.touches[0].clientY - startY);
     if (dx > dy && dx > 8) e.preventDefault();
   }, { passive: false });
 
-  viewport.addEventListener('touchend', e => {
-    if (!tracking || state.sessionMode === 'solo') { tracking = false; return; }
+  viewportEl.addEventListener('touchend', e => {
+    if (!tracking || !canSwipe()) { tracking = false; return; }
     tracking = false;
     const delta = e.changedTouches[0].clientX - startX;
-    const track = document.getElementById('setupCardTrack');
-    if (!track) return;
-    const current = track.style.transform === 'translateX(-100%)' ? 1 : 0;
-    if (delta < -30 && current === 0) showSetupCard(1);
-    if (delta >  30 && current === 1) showSetupCard(0);
+    const current = trackEl.style.transform === 'translateX(-100%)' ? 1 : 0;
+    if (delta < -30 && current === 0) showCard(1);
+    if (delta >  30 && current === 1) showCard(0);
   }, { passive: true });
 
-  document.querySelectorAll('.setup-card-dot').forEach((dot, i) => {
-    dot.addEventListener('click', () => {
-      if (state.sessionMode === 'solo' && i === 1) return;
-      showSetupCard(i);
-    });
+  document.querySelectorAll(dotSelector).forEach((dot, i) => {
+    dot.addEventListener('click', () => showCard(i));
   });
+
+  return showCard;
+}
+
+function setupSwipe() {
+  const viewport = document.getElementById('setupCardViewport');
+  const track    = document.getElementById('setupCardTrack');
+  if (!viewport || !track) return;
+  createSwipe(viewport, track, '.setup-card-dot', () => state.sessionMode !== 'solo');
+}
+
+function setupSummarySwipe() {
+  const viewport = document.getElementById('summaryCardViewport');
+  const track    = document.getElementById('summaryCardTrack');
+  if (!viewport || !track) return;
+  createSwipe(viewport, track, '#summaryCardDots .setup-card-dot', () => true);
 }
 
 function updateWatchIndicator(index) {
@@ -1195,8 +1210,20 @@ function formatMinSec(ms) {
 }
 
 function renderSummary() {
+  const isSolo   = state.sessionMode === 'solo';
+  const isMobile = window.innerWidth <= 640;
+
+  // Rule 1 — Solo: remove panel 1, canvas 1, and dots from DOM entirely
+  if (isSolo) {
+    document.getElementById('summaryPanel1')?.remove();
+    document.getElementById('graphCanvasSummary1')?.remove();
+    document.getElementById('summaryCardDots')?.remove();
+  }
+
   state.users.forEach((u, i) => {
+    if (isSolo && i === 1) return;
     const card = document.getElementById('summaryCard' + i);
+    if (!card) return;
 
     card.querySelector('.summary-card__name').textContent  = u.name || 'Athlete ' + (i + 1);
     card.querySelector('.summary-avg-hr').textContent      = u.hrCount > 0 ? Math.round(u.hrSum / u.hrCount) + ' bpm' : '--';
@@ -1273,9 +1300,12 @@ function renderSummary() {
     });
   }
 
-  // Render per-user summary graphs from full session history
+  // Render graphs
   renderUserGraph(document.getElementById('graphCanvasSummary0'), 0);
-  renderUserGraph(document.getElementById('graphCanvasSummary1'), 1);
+  if (!isSolo) renderUserGraph(document.getElementById('graphCanvasSummary1'), 1);
+
+  // Rule 3 — Duo mobile: activate swipe between stat cards
+  if (!isSolo && isMobile) setupSummarySwipe();
 
   renderAwards(computeAwards(state.users));
 }

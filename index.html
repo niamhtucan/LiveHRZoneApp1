@@ -502,10 +502,12 @@
         </g>
       </svg>
 
-      <div class="summary-panels">
+      <!-- Swipeable stat cards -->
+      <div class="summary-card-viewport" id="summaryCardViewport">
+        <div class="summary-card-track" id="summaryCardTrack">
 
         <!-- User 0 summary panel -->
-        <div class="summary-panel">
+        <div class="summary-panel" id="summaryPanel0">
           <div class="summary-card" id="summaryCard0">
             <div class="summary-card__name">Athlete 1</div>
             <div class="summary-stat">
@@ -558,11 +560,10 @@
               </div>
             </div>
           </div>
-          <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary0"></canvas>
         </div>
 
         <!-- User 1 summary panel -->
-        <div class="summary-panel">
+        <div class="summary-panel" id="summaryPanel1">
           <div class="summary-card" id="summaryCard1">
             <div class="summary-card__name">Athlete 2</div>
             <div class="summary-stat">
@@ -615,9 +616,21 @@
               </div>
             </div>
           </div>
-          <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary1"></canvas>
         </div>
 
+        </div><!-- end .summary-card-track -->
+      </div><!-- end .summary-card-viewport -->
+
+      <!-- Dot pagination — hidden on desktop, shown on mobile duo -->
+      <div class="summary-card-dots" id="summaryCardDots">
+        <span class="setup-card-dot active"></span>
+        <span class="setup-card-dot"></span>
+      </div>
+
+      <!-- Graphs — fixed below cards, always visible, not swiped -->
+      <div class="summary-graphs" id="summaryGraphs">
+        <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary0"></canvas>
+        <canvas class="graph-canvas graph-canvas--summary" id="graphCanvasSummary1"></canvas>
       </div>
 
       <!-- Awards row — populated by renderAwards() -->

@@ -96,6 +96,21 @@ ratio = currentHR / maxHR
 - Use inline error messages in the UI — never `alert()`
 - BLE Heart Rate Service UUID: `0x180D` / characteristic: `0x2A37`
 
+## Setup Screen Layout
+
+The setup screen (`#screen-setup`) uses a **swipe-card viewport** — one athlete card visible at a time:
+
+- `.setup-card-viewport` — `overflow: hidden`, `max-width: 480px`
+- `.setup-card-track` — flex row of two `.setup-user` cards; `transform: translateX(0 or -100%)` for navigation
+- `.setup-card-dots` — dot pagination (hidden in solo mode)
+- `.watch-indicators` — row of smartwatch SVG icons above the viewport, one per user; grey (`#9E9E9E`) when disconnected, lime (`#B2F332`) when connected via `.watch-indicator--connected` class
+
+**Navigation:** `showSetupCard(index)` sets track `translateX` and toggles dot `.active` class. Touch swipe (touchstart/touchend) and dot click both call `showSetupCard`. In solo mode swipe is disabled and dots/indicator1 are hidden.
+
+**Connection state updates:** `updateWatchIndicator(index)` toggles `.watch-indicator--connected` and updates the name label. Called from `connectDevice()` (success), `onDisconnectedSetup()`, `initSetup()` (init), and `setSessionMode()` (on disconnect).
+
+**All existing element IDs unchanged:** `setupUser0/1`, `connect0/1`, `name0/1`, `maxhr0/1`, `weight0/1`, `status0/1`.
+
 ## Session Mode
 `state.sessionMode` — `'duo'` (default) or `'solo'`. Memory-only, never written to localStorage.
 
@@ -103,6 +118,22 @@ ratio = currentHR / maxHR
 - **Solo**: only User 0's setup card is shown. "Start Session" enables when User 0 connects. Dashboard adds `solo-mode` CSS class — hides User 1 panel, centres User 0 panel (`max-width: 640px`).
 
 `setSessionMode(mode, startBtn)` handles all UI side-effects: toggling `.mode-btn--active`, hiding/showing `#setupUser1`, disconnecting User 1 if switching to solo mid-connect, calling `updateStartButton()`. `initNewSession()` resets mode to `'duo'`.
+
+## Navigation Flow
+
+```
+Landing → Let's Go → Mode Selector → Continue → Setup → Start Workout → Dashboard → End Workout → Summary
+               ↑ back          ↑ back                                                        ↑ back (→ Landing via initNewSession)
+```
+
+Back arrows appear on **Mode Selector**, **Setup**, and **Summary**. No back arrow on Landing or Dashboard.
+
+- Mode → back → Landing: `showScreen('screen-landing')` — radio selections preserved
+- Setup → back → Mode: `showScreen('screen-mode')` — form inputs and BLE connections preserved
+- Summary → back → Landing: `initNewSession()` — resets state, disconnects BLE, goes to landing
+
+`.back-btn` is `position: absolute; top: 16px; left: 12px; z-index: 3; 44×44px touch target`.
+On mode and setup screens, `.setup-logo` is shifted to `left: 60px` to avoid overlap.
 
 ## Workout Type
 

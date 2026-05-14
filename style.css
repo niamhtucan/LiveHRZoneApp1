@@ -71,6 +71,32 @@ html, body {
 .pill--13 { width:  70px; height: 180px; background: #E8F3DA; top: 55%;    right: 22%;  transform: rotate(40deg);  }
 .pill--14 { width: 100px; height: 250px; background: #B2F332; top: 68%;    left: 45%;   transform: rotate(-60deg); }
 
+/* ─── Back Button ─────────────────────────────────────────────────────────── */
+.back-btn {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 3;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.back-btn:active { opacity: 0.6; }
+
+.back-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* ─── Setup Logo ──────────────────────────────────────────────────────────── */
 .setup-logo {
   position: absolute;
@@ -84,6 +110,22 @@ html, body {
   z-index: 2;
 }
 
+/* Shift logo right on screens that have a back button */
+#screen-mode  .setup-logo { left: 60px; }
+#screen-setup .setup-logo { left: 60px; }
+
+/* ─── Hero Heading Stroke ─────────────────────────────────────────────────── */
+/* Thin black outline on the visible white base text of all clip-path headings.
+   text[fill="white"] targets only the rendered letterforms, not the <clipPath> defs. */
+.landing-hero text[fill="white"],
+.hero-title    text[fill="white"],
+.dash-hero     text[fill="white"],
+.summary-hero  text[fill="white"] {
+  stroke:       #000000;
+  stroke-width: 2px;
+  paint-order:  stroke fill;
+}
+
 /* ─── Hero Title SVG ──────────────────────────────────────────────────────── */
 .hero-title {
   width: 100%;
@@ -95,20 +137,79 @@ html, body {
   pointer-events: none;
 }
 
-.setup-users {
+/* ─── Watch Connection Indicators ────────────────────────────────────────── */
+.watch-indicators {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: 480px;
+  gap: 32px;
+  justify-content: center;
   position: relative;
   z-index: 1;
 }
 
-@media (min-width: 640px) {
-  .setup-users { flex-direction: row; }
-  .setup-user  { flex: 1; }
+.watch-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
+
+.watch-icon {
+  width: 36px;
+  height: 36px;
+  color: #9E9E9E;
+  transition: color 0.3s ease;
+}
+
+.watch-indicator--connected .watch-icon { color: #B2F332; }
+
+.watch-indicator__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ─── Swipe Card Viewport ─────────────────────────────────────────────────── */
+.setup-card-viewport {
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.setup-card-track {
+  display: flex;
+  flex-direction: row;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.setup-card-track > .setup-user {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+/* ─── Dot Pagination ──────────────────────────────────────────────────────── */
+.setup-card-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.setup-card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.setup-card-dot.active { background: #B2F332; }
 
 .setup-user {
   background: var(--card-bg);

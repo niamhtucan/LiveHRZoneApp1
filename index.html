@@ -75,6 +75,13 @@
   <div class="screen" id="screen-mode" hidden>
     <div class="mode-screen">
 
+      <button class="back-btn" id="backBtnMode" type="button" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+
       <!-- Background pill shapes (reuse setup set) -->
       <div class="setup-bg" aria-hidden="true">
         <span class="pill pill--1"></span>
@@ -165,6 +172,13 @@
   <div class="screen" id="screen-setup" hidden>
     <div class="setup-screen">
 
+      <button class="back-btn" id="backBtnSetup" type="button" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+
       <!-- Background pill shapes -->
       <div class="setup-bg" aria-hidden="true">
         <span class="pill pill--1"></span>
@@ -216,44 +230,83 @@
         </g>
       </svg>
 
-      <div class="setup-users">
-        <!-- User 0 -->
-        <div class="setup-user" id="setupUser0">
-          <h2>Athlete 1</h2>
-          <div class="field">
-            <label for="name0">Name</label>
-            <input type="text" id="name0" placeholder="e.g. Niamh" autocomplete="off" autocorrect="off">
-          </div>
-          <div class="field">
-            <label for="maxhr0">Max Heart Rate</label>
-            <input type="number" id="maxhr0" placeholder="e.g. 190" min="100" max="220">
-          </div>
-          <div class="field">
-            <label for="weight0">Body Weight (kg)</label>
-            <input type="number" id="weight0" placeholder="e.g. 70" min="30" max="200">
-          </div>
-          <button class="btn btn-connect" id="connect0" type="button">Connect Watch</button>
-          <p class="status" id="status0">Not connected</p>
+      <!-- Watch connection indicators -->
+      <div class="watch-indicators" id="watchIndicators">
+        <div class="watch-indicator" id="watchIndicator0">
+          <svg class="watch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="9" y="2"  width="6" height="3" rx="1"/>
+            <rect x="5" y="5"  width="14" height="14" rx="3"/>
+            <rect x="9" y="19" width="6" height="3" rx="1"/>
+            <line x1="8" y1="10" x2="16" y2="10"/>
+            <line x1="8" y1="13" x2="13" y2="13"/>
+          </svg>
+          <span class="watch-indicator__name" id="watchName0">Athlete 1</span>
         </div>
+        <div class="watch-indicator" id="watchIndicator1">
+          <svg class="watch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="9" y="2"  width="6" height="3" rx="1"/>
+            <rect x="5" y="5"  width="14" height="14" rx="3"/>
+            <rect x="9" y="19" width="6" height="3" rx="1"/>
+            <line x1="8" y1="10" x2="16" y2="10"/>
+            <line x1="8" y1="13" x2="13" y2="13"/>
+          </svg>
+          <span class="watch-indicator__name" id="watchName1">Athlete 2</span>
+        </div>
+      </div>
 
-        <!-- User 1 -->
-        <div class="setup-user" id="setupUser1">
-          <h2>Athlete 2</h2>
-          <div class="field">
-            <label for="name1">Name</label>
-            <input type="text" id="name1" placeholder="e.g. Partner" autocomplete="off" autocorrect="off">
+      <!-- Swipeable card viewport -->
+      <div class="setup-card-viewport" id="setupCardViewport">
+        <div class="setup-card-track" id="setupCardTrack">
+
+          <!-- User 0 -->
+          <div class="setup-user" id="setupUser0">
+            <h2>Athlete 1</h2>
+            <div class="field">
+              <label for="name0">Name</label>
+              <input type="text" id="name0" placeholder="e.g. Niamh" autocomplete="off" autocorrect="off">
+            </div>
+            <div class="field">
+              <label for="maxhr0">Max Heart Rate</label>
+              <input type="number" id="maxhr0" placeholder="e.g. 190" min="100" max="220">
+            </div>
+            <div class="field">
+              <label for="weight0">Body Weight (kg)</label>
+              <input type="number" id="weight0" placeholder="e.g. 70" min="30" max="200">
+            </div>
+            <button class="btn btn-connect" id="connect0" type="button">Connect Watch</button>
+            <p class="status" id="status0">Not connected</p>
           </div>
-          <div class="field">
-            <label for="maxhr1">Max Heart Rate</label>
-            <input type="number" id="maxhr1" placeholder="e.g. 185" min="100" max="220">
+
+          <!-- User 1 -->
+          <div class="setup-user" id="setupUser1">
+            <h2>Athlete 2</h2>
+            <div class="field">
+              <label for="name1">Name</label>
+              <input type="text" id="name1" placeholder="e.g. Partner" autocomplete="off" autocorrect="off">
+            </div>
+            <div class="field">
+              <label for="maxhr1">Max Heart Rate</label>
+              <input type="number" id="maxhr1" placeholder="e.g. 185" min="100" max="220">
+            </div>
+            <div class="field">
+              <label for="weight1">Body Weight (kg)</label>
+              <input type="number" id="weight1" placeholder="e.g. 70" min="30" max="200">
+            </div>
+            <button class="btn btn-connect" id="connect1" type="button">Connect Watch</button>
+            <p class="status" id="status1">Not connected</p>
           </div>
-          <div class="field">
-            <label for="weight1">Body Weight (kg)</label>
-            <input type="number" id="weight1" placeholder="e.g. 70" min="30" max="200">
-          </div>
-          <button class="btn btn-connect" id="connect1" type="button">Connect Watch</button>
-          <p class="status" id="status1">Not connected</p>
+
         </div>
+      </div>
+
+      <!-- Dot pagination — hidden in solo mode -->
+      <div class="setup-card-dots" id="setupCardDots">
+        <span class="setup-card-dot active" data-index="0"></span>
+        <span class="setup-card-dot" data-index="1"></span>
       </div>
 
       <button class="btn btn-start" id="startBtn" type="button" disabled>Start Workout</button>
@@ -380,6 +433,13 @@
   <!-- ── Summary Screen ───────────────────────────────────────────────── -->
   <div class="screen" id="screen-summary" hidden>
     <div class="summary-screen">
+
+      <button class="back-btn" id="backBtnSummary" type="button" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
 
       <!-- Background pill shapes -->
       <div class="summary-bg" aria-hidden="true">

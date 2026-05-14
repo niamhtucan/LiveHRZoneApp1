@@ -218,20 +218,80 @@ function initModeScreen() {
 
 function proceedToSetup() {
   setSessionMode(state.sessionMode, document.getElementById('startBtn'));
+  showSetupCard(0);
   showScreen('screen-setup');
 }
 
 /* ─── Setup Screen ────────────────────────────────────────────────────────── */
 
+function showSetupCard(index) {
+  const track = document.getElementById('setupCardTrack');
+  if (!track) return;
+  track.style.transform = 'translateX(-' + (index * 100) + '%)';
+  document.querySelectorAll('.setup-card-dot').forEach((d, i) =>
+    d.classList.toggle('active', i === index)
+  );
+}
+
+function setupSwipe() {
+  const viewport = document.getElementById('setupCardViewport');
+  if (!viewport) return;
+  let startX = 0;
+
+  viewport.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+
+  viewport.addEventListener('touchend', e => {
+    if (state.sessionMode === 'solo') return;
+    const delta = e.changedTouches[0].clientX - startX;
+    const track = document.getElementById('setupCardTrack');
+    if (!track) return;
+    const current = track.style.transform === 'translateX(-100%)' ? 1 : 0;
+    if (delta < -50 && current === 0) showSetupCard(1);
+    if (delta >  50 && current === 1) showSetupCard(0);
+  }, { passive: true });
+
+  document.querySelectorAll('.setup-card-dot').forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      if (state.sessionMode === 'solo' && i === 1) return;
+      showSetupCard(i);
+    });
+  });
+}
+
+function updateWatchIndicator(index) {
+  const indicator = document.getElementById('watchIndicator' + index);
+  if (!indicator) return;
+  indicator.classList.toggle('watch-indicator--connected', state.users[index].connected);
+  const nameInput = document.getElementById('name' + index);
+  const name = (nameInput && nameInput.value.trim()) || 'Athlete ' + (index + 1);
+  const nameEl = document.getElementById('watchName' + index);
+  if (nameEl) nameEl.textContent = name;
+}
+
 function setSessionMode(mode, startBtn) {
   state.sessionMode = mode;
-  document.getElementById('setupUser1').hidden = (mode === 'solo');
-  if (mode === 'solo' && state.users[1].connected) {
+  const isSolo = mode === 'solo';
+
+  // Watch indicator visibility
+  const wi1 = document.getElementById('watchIndicator1');
+  if (wi1) wi1.hidden = isSolo;
+
+  // Dot pagination visibility
+  const dots = document.getElementById('setupCardDots');
+  if (dots) dots.hidden = isSolo;
+
+  // Always land on card 0
+  showSetupCard(0);
+
+  if (isSolo && state.users[1].connected) {
     try { state.users[1].device.gatt.disconnect(); } catch (_) {}
     state.users[1].connected = false;
     document.getElementById('connect1').textContent = 'Connect Watch';
     document.getElementById('connect1').classList.remove('connected');
     setStatus(1, 'Not connected', '');
+    updateWatchIndicator(1);
   }
   updateStartButton(startBtn);
 }
@@ -248,6 +308,9 @@ function initSetup() {
     if (maxHREl  && p.maxHR)  maxHREl.value  = p.maxHR;
     if (weightEl && p.weight) weightEl.value = p.weight;
   });
+
+  setupSwipe();
+  [0, 1].forEach(i => updateWatchIndicator(i));
 
   const startBtn = document.getElementById('startBtn');
 
@@ -324,6 +387,7 @@ async function connectDevice(index, startBtn) {
     btn.classList.add('connected');
     btn.disabled = false;
     setStatus(index, 'Connected to ' + device.name, 'connected');
+    updateWatchIndicator(index);
     updateStartButton(startBtn);
 
   } catch (err) {
@@ -342,6 +406,7 @@ function onDisconnectedSetup(index, startBtn) {
   btn.textContent = 'Connect Watch';
   btn.classList.remove('connected');
   setStatus(index, 'Disconnected. Try reconnecting.', 'error');
+  updateWatchIndicator(index);
   updateStartButton(startBtn);
 }
 
@@ -1233,6 +1298,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('letsGoBtn').addEventListener('click', () => {
     showScreen('screen-mode');
   });
+  document.getElementById('backBtnMode').addEventListener('click', () => {
+    showScreen('screen-landing');
+  });
+  document.getElementById('backBtnSetup').addEventListener('click', () => {
+    showScreen('screen-mode');
+  });
+  document.getElementById('backBtnSummary').addEventListener('click', initNewSession);
   initModeScreen();
   initSetup();
   document.getElementById('endBtn').addEventListener('click', endWorkout);

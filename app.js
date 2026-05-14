@@ -1224,12 +1224,15 @@ function initNewSession() {
     .forEach(r => { r.checked = false; });
   document.getElementById('continueBtn').disabled = true;
   state.workoutType = null;
-  showScreen('screen-mode');
+  showScreen('screen-landing');
 }
 
 /* ─── Boot ────────────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('letsGoBtn').addEventListener('click', () => {
+    showScreen('screen-mode');
+  });
   initModeScreen();
   initSetup();
   document.getElementById('endBtn').addEventListener('click', endWorkout);

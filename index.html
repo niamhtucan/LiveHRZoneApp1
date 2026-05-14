@@ -8,8 +8,71 @@
 </head>
 <body>
 
+  <!-- ── Landing Screen ──────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-landing">
+    <div class="landing-screen">
+
+      <div class="setup-bg" aria-hidden="true">
+        <span class="pill pill--1"></span>
+        <span class="pill pill--2"></span>
+        <span class="pill pill--3"></span>
+        <span class="pill pill--4"></span>
+        <span class="pill pill--5"></span>
+        <span class="pill pill--6"></span>
+        <span class="pill pill--7"></span>
+      </div>
+
+      <div class="setup-logo">LiveHRZone</div>
+
+      <svg class="landing-hero" viewBox="0 0 1000 340"
+           xmlns="http://www.w3.org/2000/svg" aria-label="READY TO WORK!">
+        <defs>
+          <clipPath id="landingHeroClip">
+            <text x="500" y="155" text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900" font-size="145" letter-spacing="-3">READY TO</text>
+            <text x="500" y="325" text-anchor="middle"
+                  font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+                  font-weight="900" font-size="145" letter-spacing="-3">WORK!</text>
+          </clipPath>
+        </defs>
+        <text x="500" y="155" text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900" font-size="145" letter-spacing="-3"
+              fill="white">READY TO</text>
+        <text x="500" y="325" text-anchor="middle"
+              font-family="-apple-system,BlinkMacSystemFont,'Arial Black','Helvetica Neue',sans-serif"
+              font-weight="900" font-size="145" letter-spacing="-3"
+              fill="white">WORK!</text>
+        <g clip-path="url(#landingHeroClip)">
+          <ellipse cx="80"  cy="85"  rx="210" ry="130" fill="#B2F332"/>
+          <ellipse cx="300" cy="95"  rx="190" ry="120" fill="#6787AF"/>
+          <ellipse cx="520" cy="75"  rx="200" ry="135" fill="#BADDCF"/>
+          <ellipse cx="740" cy="90"  rx="190" ry="120" fill="#E8F3DA"/>
+          <ellipse cx="950" cy="80"  rx="180" ry="125" fill="#19123D"/>
+          <ellipse cx="80"  cy="255" rx="210" ry="130" fill="#6787AF"/>
+          <ellipse cx="300" cy="265" rx="190" ry="120" fill="#B2F332"/>
+          <ellipse cx="500" cy="248" rx="200" ry="135" fill="#F3EEE8"/>
+          <ellipse cx="720" cy="262" rx="190" ry="120" fill="#BADDCF"/>
+          <ellipse cx="940" cy="252" rx="180" ry="125" fill="#B2F332"/>
+          <ellipse cx="200" cy="130" rx="165" ry="100" fill="#E8F3DA"/>
+          <ellipse cx="430" cy="120" rx="160" ry="110" fill="#B2F332"/>
+          <ellipse cx="660" cy="130" rx="160" ry="100" fill="#6787AF"/>
+          <ellipse cx="860" cy="120" rx="155" ry="110" fill="#BADDCF"/>
+          <ellipse cx="200" cy="300" rx="165" ry="100" fill="#19123D"/>
+          <ellipse cx="430" cy="290" rx="160" ry="110" fill="#BADDCF"/>
+          <ellipse cx="660" cy="300" rx="160" ry="100" fill="#B2F332"/>
+          <ellipse cx="860" cy="290" rx="155" ry="110" fill="#E8F3DA"/>
+        </g>
+      </svg>
+
+      <button class="btn btn-landing" id="letsGoBtn" type="button">Let's Go →</button>
+
+    </div>
+  </div>
+
   <!-- ── Mode Selector Screen ───────────────────────────────────────────── -->
-  <div class="screen" id="screen-mode">
+  <div class="screen" id="screen-mode" hidden>
     <div class="mode-screen">
 
       <!-- Background pill shapes (reuse setup set) -->

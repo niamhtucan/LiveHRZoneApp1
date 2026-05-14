@@ -18,10 +18,109 @@ function parseHR(dataView) {
   return isUint16 ? dataView.getUint16(1, true) : dataView.getUint8(1);
 }
 
+/* ─── Tabata Phase Definitions ───────────────────────────────────────────── */
+
+const TABATA_PHASES = [
+  {
+    id: 'warmup', name: 'Warm Up',
+    durationMs: 5 * 60 * 1000, type: 'steady', targetZones: [1, 2],
+    prompts: {
+      start:    ['Easy spin', 'Gradually increase cadence', 'Prepare for high intensity'],
+      periodic: ['Easy spin', 'Gradually increase cadence', 'Breathe steadily'],
+    },
+    alerts: { tooHigh: 'Reduce effort — stay easy during warm-up', tooLow: null },
+  },
+  {
+    id: 'tabata1', name: 'Tabata Set 1', subtitle: 'Fast Flats',
+    durationMs: 4 * 60 * 1000, type: 'tabata',
+    rounds: 8, workMs: 20000, restMs: 10000, physiologicalLag: true,
+    targetZones: [4, 5],
+    prompts: {
+      start:    ['Fast Flats — high cadence', 'Sprint for 20 seconds', 'Go!'],
+      work:     ['Sprint!', 'High cadence', 'Push hard', 'Drive!'],
+      rest:     ['Recover', 'Light spin', 'Control breathing'],
+    },
+    alerts: { tooLow: 'Increase resistance or cadence', tooHigh: 'Reduce sprint intensity' },
+  },
+  {
+    id: 'recovery1', name: 'Active Recovery',
+    durationMs: 4 * 60 * 1000, type: 'recovery', targetZones: [1, 2],
+    prompts: {
+      start:    ['Easy pedaling', 'Lower breathing rate', 'Prepare for next effort'],
+      periodic: ['Easy pedaling', 'Breathe and recover', 'Stay loose'],
+    },
+    alerts: { tooHigh: 'Ease off — let your HR settle', tooLow: null },
+  },
+  {
+    id: 'tabata2', name: 'Tabata Set 2', subtitle: 'Heavy Climbs',
+    durationMs: 4 * 60 * 1000, type: 'tabata',
+    rounds: 8, workMs: 20000, restMs: 10000, physiologicalLag: true,
+    targetZones: [4, 5],
+    prompts: {
+      start:    ['Heavy Climbs — high resistance', 'Drive through your legs', 'Go!'],
+      work:     ['Heavy resistance', 'Drive through legs', 'Controlled power', 'Push!'],
+      rest:     ['Seated recovery', 'Release tension', 'Breathe'],
+    },
+    alerts: { tooLow: 'Add more resistance', tooHigh: 'Reduce resistance slightly' },
+  },
+  {
+    id: 'recovery2', name: 'Recovery',
+    durationMs: 4 * 60 * 1000, type: 'recovery', targetZones: [1, 2],
+    prompts: {
+      start:    ['Easy pedaling', 'Let HR come down', 'Two sets remaining'],
+      periodic: ['Keep spinning easy', 'Breathe deeply', 'Stay relaxed'],
+    },
+    alerts: { tooHigh: 'Keep effort very easy', tooLow: null },
+  },
+  {
+    id: 'tabata3', name: 'Tabata Set 3', subtitle: 'Climbs v2',
+    durationMs: 4 * 60 * 1000, type: 'tabata',
+    rounds: 8, workMs: 20000, restMs: 10000, physiologicalLag: true,
+    targetZones: [4, 5],
+    prompts: {
+      start:    ['Climbs again — dig deep', 'Heavier than before', 'Go!'],
+      work:     ['Drive!', 'Heavy gear', 'Push through', 'Stay strong'],
+      rest:     ['Light spin', 'Recover fast', 'One set after this'],
+    },
+    alerts: { tooLow: 'Add more resistance', tooHigh: 'Manage effort' },
+  },
+  {
+    id: 'recovery3', name: 'Brief Recovery',
+    durationMs: 1 * 60 * 1000, type: 'recovery', targetZones: [2, 3],
+    prompts: {
+      start:    ['Quick breather', 'Prepare for final push'],
+      periodic: ['Prepare for final push'],
+    },
+    alerts: { tooHigh: null, tooLow: null },
+  },
+  {
+    id: 'tabata4', name: 'Tabata Set 4', subtitle: 'Max Sprints',
+    durationMs: 4 * 60 * 1000, type: 'tabata',
+    rounds: 8, workMs: 20000, restMs: 10000, physiologicalLag: true,
+    targetZones: [4, 5],
+    prompts: {
+      start:    ['Final push — max sprints', 'Everything you have', 'Go!'],
+      work:     ['Final push!', 'Explosive effort', 'Maintain form', 'Max effort!'],
+      rest:     ['Hold on', 'Almost there', 'Breathe fast'],
+    },
+    alerts: { tooLow: 'Increase speed or resistance', tooHigh: 'Manage — final set' },
+  },
+  {
+    id: 'cooldown', name: 'Cool Down',
+    durationMs: 5 * 60 * 1000, type: 'steady', targetZones: [1, 2],
+    prompts: {
+      start:    ['Well done!', 'Slow cadence', 'Deep breathing'],
+      periodic: ['Slow cadence', 'Deep breathing', 'Recover fully'],
+    },
+    alerts: { tooHigh: 'Keep it very easy now', tooLow: null },
+  },
+];
+
 /* ─── State ───────────────────────────────────────────────────────────────── */
 
 const state = {
-  sessionMode: 'duo', // 'solo' | 'duo' — memory only, never localStorage
+  sessionMode: 'duo',  // 'solo' | 'duo' — memory only, never localStorage
+  workoutType: null,   // 'free-ride' | 'tabata' — set on mode screen, null until selected
   users: [
     { name: '', maxHR: 0, weight: 70, device: null, characteristic: null,
       hr: 0, zone: 0, connected: false,
@@ -33,6 +132,26 @@ const state = {
       hrHistory: [] },
   ],
   sessionStart: null,
+  tabata: {
+    active:               false,
+    intervalId:           null,
+    phaseIndex:           0,
+    phaseStartTime:       null,
+    roundIndex:           0,
+    intervalPhase:        'work',
+    intervalStartTime:    null,
+    lastHRCheckTime:      0,
+    promptTimerId:        null,
+    promptPendingIds:     [],
+    periodicPromptId:     null,
+    promptPriority:       0,     // 0=idle, 1=info, 2=alert, 3=safety
+    users: [
+      { lowHRRoundCount: 0, lastWorkZone: 0 },
+      { lowHRRoundCount: 0, lastWorkZone: 0 },
+    ],
+    completions:  [],
+    recoveryData: [],
+  },
 };
 
 /* ─── Screen Switching ────────────────────────────────────────────────────── */
@@ -76,6 +195,32 @@ function saveSummary() {
   } catch (_) {}
 }
 
+/* ─── Mode Selector Screen ────────────────────────────────────────────────── */
+
+function initModeScreen() {
+  const continueBtn = document.getElementById('continueBtn');
+
+  function checkReady() {
+    const modeOk = !!document.querySelector('input[name="modeSelect"]:checked');
+    const typeOk = !!document.querySelector('input[name="workoutType"]:checked');
+    continueBtn.disabled = !(modeOk && typeOk);
+  }
+
+  document.querySelectorAll('input[name="modeSelect"]').forEach(r =>
+    r.addEventListener('change', () => { state.sessionMode = r.value; checkReady(); })
+  );
+  document.querySelectorAll('input[name="workoutType"]').forEach(r =>
+    r.addEventListener('change', () => { state.workoutType = r.value; checkReady(); })
+  );
+
+  continueBtn.addEventListener('click', proceedToSetup);
+}
+
+function proceedToSetup() {
+  setSessionMode(state.sessionMode, document.getElementById('startBtn'));
+  showScreen('screen-setup');
+}
+
 /* ─── Setup Screen ────────────────────────────────────────────────────────── */
 
 function setSessionMode(mode, startBtn) {
@@ -105,10 +250,6 @@ function initSetup() {
   });
 
   const startBtn = document.getElementById('startBtn');
-
-  document.querySelectorAll('input[name="sessionMode"]').forEach(radio => {
-    radio.addEventListener('change', () => setSessionMode(radio.value, startBtn));
-  });
 
   [0, 1].forEach(i => {
     document.getElementById('connect' + i)
@@ -276,6 +417,8 @@ function startWorkout() {
   }
 
   showScreen('screen-dashboard');
+
+  if (state.workoutType === 'tabata') startTabata();
 }
 
 /* ─── HR Data Handler (shared across setup/dashboard contexts) ────────────── */
@@ -326,6 +469,18 @@ function onHRData(index, dataView) {
   }
 
   renderUserGraph(document.getElementById('graphCanvas' + index), index);
+
+  // Tabata safety check — runs on every HR point, faster than the 3s eval loop
+  if (state.workoutType === 'tabata' && state.tabata.active) {
+    const pct = hr / u.maxHR;
+    if (pct >= 1.00) {
+      showTabataPrompt('⚠ Stop interval — max HR reached', 'safety', 8000,
+        state.sessionMode === 'duo' ? index : null);
+    } else if (pct >= 0.97) {
+      showTabataPrompt('⚠ Reduce resistance — HR near maximum', 'alert', 6000,
+        state.sessionMode === 'duo' ? index : null);
+    }
+  }
 }
 
 /* ─── Dashboard Disconnection ─────────────────────────────────────────────── */
@@ -369,6 +524,8 @@ function onDashboardDisconnect(index) {
 /* ─── End Workout ─────────────────────────────────────────────────────────── */
 
 function endWorkout() {
+  if (state.tabata.active) stopTabata();
+
   const now = Date.now();
 
   // Flush remaining zone time for connected users
@@ -525,6 +682,265 @@ function renderUserGraph(canvas, userIndex) {
     }
   });
   ctx.stroke();
+}
+
+/* ─── Tabata Engine ──────────────────────────────────────────────────────── */
+
+function fmtMs(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Priority levels: 1=info, 2=alert, 3=safety
+function showTabataPrompt(text, type, durationMs, userIndex) {
+  const priority = type === 'safety' ? 3 : type === 'alert' ? 2 : 1;
+
+  // Don't replace a higher-priority prompt already showing
+  if (priority < state.tabata.promptPriority) return;
+
+  // In duo mode with a specific user, prefix with their name
+  const displayText = (state.sessionMode === 'duo' && userIndex != null)
+    ? state.users[userIndex].name + ' — ' + text
+    : text;
+
+  clearTimeout(state.tabata.promptTimerId);
+  state.tabata.promptPriority = priority;
+
+  const el   = document.getElementById('tabataPrompt');
+  const span = document.getElementById('tabataPromptText');
+  span.textContent = displayText;
+  el.className = 'tabata-prompt tabata-prompt--' + type + ' tabata-prompt--visible';
+  el.hidden = false;
+
+  state.tabata.promptTimerId = setTimeout(() => {
+    state.tabata.promptPriority = 0;
+    clearTabataPrompt();
+  }, durationMs);
+}
+
+function clearTabataPrompt() {
+  const el = document.getElementById('tabataPrompt');
+  el.className = 'tabata-prompt';
+  setTimeout(() => { el.hidden = true; }, 300); // allow fade-out
+}
+
+function scheduleStartPrompts(phase) {
+  // Clear any pending start-prompt timers
+  state.tabata.promptPendingIds.forEach(id => clearTimeout(id));
+  state.tabata.promptPendingIds = [];
+
+  const prompts = phase.prompts.start || [];
+  prompts.forEach((text, i) => {
+    const id = setTimeout(() => {
+      if (state.tabata.promptPriority <= 1) showTabataPrompt(text, 'info', 3500);
+    }, i * 4000);
+    state.tabata.promptPendingIds.push(id);
+  });
+}
+
+function schedulePeriodicPrompts(phase) {
+  clearInterval(state.tabata.periodicPromptId);
+  if (!phase.prompts.periodic || !phase.prompts.periodic.length) return;
+  state.tabata.periodicPromptId = setInterval(() => {
+    if (!state.tabata.active) return;
+    if (state.tabata.promptPriority <= 1) {
+      showTabataPrompt(pickRandom(phase.prompts.periodic), 'info', 4000);
+    }
+  }, 20000);
+}
+
+function updateTabataDisplay(phase) {
+  const phaseElapsed  = Date.now() - state.tabata.phaseStartTime;
+  const phaseRemaining = Math.max(0, phase.durationMs - phaseElapsed);
+  const phasePct      = Math.min(100, (phaseElapsed / phase.durationMs) * 100);
+
+  document.getElementById('tabataPhaseName').textContent =
+    phase.name + (phase.subtitle ? ' — ' + phase.subtitle : '');
+  document.getElementById('tabataPhaseTimer').textContent = fmtMs(phaseRemaining);
+  document.getElementById('tabataPhaseProgress').style.width = phasePct + '%';
+
+  const roundRow = document.getElementById('tabataIntervalRow');
+  if (phase.type === 'tabata') {
+    roundRow.hidden = false;
+    document.getElementById('tabataRoundLabel').textContent =
+      'Round ' + (state.tabata.roundIndex + 1) + ' / ' + phase.rounds;
+
+    const iLabel = document.getElementById('tabataIntervalLabel');
+    iLabel.textContent = state.tabata.intervalPhase === 'work' ? 'WORK' : 'REST';
+    iLabel.className   = 'tabata-interval-label tabata-interval-label--' + state.tabata.intervalPhase;
+
+    const intervalDuration = state.tabata.intervalPhase === 'work' ? phase.workMs : phase.restMs;
+    const intervalRemaining = Math.max(0,
+      intervalDuration - (Date.now() - state.tabata.intervalStartTime));
+    document.getElementById('tabataIntervalTimer').textContent = fmtMs(intervalRemaining);
+  } else {
+    roundRow.hidden = true;
+  }
+}
+
+function evaluateHR(phase) {
+  const isSolo  = state.sessionMode === 'solo';
+  const indices = isSolo ? [0] : [0, 1];
+
+  indices.forEach(i => {
+    const u = state.users[i];
+    if (!u.connected || u.hr === 0) return;
+
+    const tu = state.tabata.users[i];
+
+    if (phase.type === 'steady' || phase.type === 'recovery') {
+      const maxTarget = Math.max(...phase.targetZones);
+      if (u.zone > maxTarget && phase.alerts.tooHigh) {
+        showTabataPrompt(phase.alerts.tooHigh, 'alert', 5000, isSolo ? null : i);
+      }
+      return;
+    }
+
+    // Tabata phase
+    if (phase.physiologicalLag && state.tabata.roundIndex < 3) return;
+
+    if (state.tabata.intervalPhase === 'work') {
+      if (u.zone < 4 && phase.alerts.tooLow) {
+        tu.lowHRRoundCount++;
+        if (tu.lowHRRoundCount >= 2) {
+          tu.lowHRRoundCount = 0;
+          showTabataPrompt(phase.alerts.tooLow, 'alert', 5000, isSolo ? null : i);
+        }
+      } else {
+        tu.lowHRRoundCount = 0;
+      }
+    } else {
+      // Rest interval — check if HR is not recovering
+      if (u.zone > 4 && phase.alerts.tooHigh) {
+        showTabataPrompt(phase.alerts.tooHigh, 'alert', 5000, isSolo ? null : i);
+      }
+    }
+  });
+}
+
+function advanceInterval(phase) {
+  const t   = state.tabata;
+  const now = Date.now();
+
+  if (t.intervalPhase === 'work') {
+    // Record completion for each connected user
+    const indices = state.sessionMode === 'solo' ? [0] : [0, 1];
+    indices.forEach(i => {
+      if (state.users[i].connected) {
+        t.completions.push({ setId: phase.id, round: t.roundIndex, zone: state.users[i].zone });
+      }
+    });
+    t.intervalPhase    = 'rest';
+    t.intervalStartTime = now;
+    showTabataPrompt(pickRandom(phase.prompts.rest), 'info', 3500);
+  } else {
+    t.roundIndex++;
+    if (t.roundIndex >= phase.rounds) {
+      advancePhase();
+    } else {
+      t.intervalPhase    = 'work';
+      t.intervalStartTime = now;
+      // Reset lowHRRoundCount per-round is done in evaluateHR; reset between work intervals
+      showTabataPrompt(pickRandom(phase.prompts.work), 'info', 3000);
+    }
+  }
+}
+
+function advancePhase() {
+  clearInterval(state.tabata.periodicPromptId);
+  state.tabata.phaseIndex++;
+  if (state.tabata.phaseIndex >= TABATA_PHASES.length) {
+    stopTabata();
+    endWorkout();
+    return;
+  }
+  startPhase(state.tabata.phaseIndex);
+}
+
+function startPhase(i) {
+  const phase = TABATA_PHASES[i];
+  const t     = state.tabata;
+  const now   = Date.now();
+
+  t.phaseStartTime     = now;
+  t.roundIndex         = 0;
+  t.intervalPhase      = 'work';
+  t.intervalStartTime  = now;
+  t.lastHRCheckTime    = now;
+  t.users[0].lowHRRoundCount = 0;
+  t.users[1].lowHRRoundCount = 0;
+
+  scheduleStartPrompts(phase);
+
+  if (phase.type !== 'tabata') {
+    schedulePeriodicPrompts(phase);
+  }
+
+  updateTabataDisplay(phase);
+}
+
+function tickTabata() {
+  if (!state.tabata.active) return;
+  const phase      = TABATA_PHASES[state.tabata.phaseIndex];
+  const phaseElapsed = Date.now() - state.tabata.phaseStartTime;
+
+  if (phaseElapsed >= phase.durationMs) {
+    advancePhase();
+    return;
+  }
+
+  if (phase.type === 'tabata') {
+    const intElapsed  = Date.now() - state.tabata.intervalStartTime;
+    const intDuration = state.tabata.intervalPhase === 'work' ? phase.workMs : phase.restMs;
+    if (intElapsed >= intDuration) {
+      advanceInterval(phase);
+      // advanceInterval may call advancePhase; display update happens on next tick
+      return;
+    }
+  }
+
+  updateTabataDisplay(phase);
+
+  // HR eval every 3s
+  const now = Date.now();
+  if (now - state.tabata.lastHRCheckTime >= 3000) {
+    state.tabata.lastHRCheckTime = now;
+    evaluateHR(phase);
+  }
+}
+
+function startTabata() {
+  const t = state.tabata;
+  t.active          = true;
+  t.phaseIndex      = 0;
+  t.completions     = [];
+  t.recoveryData    = [];
+  t.promptPriority  = 0;
+  t.promptPendingIds.forEach(id => clearTimeout(id));
+  t.promptPendingIds = [];
+  clearInterval(t.periodicPromptId);
+
+  document.getElementById('screen-dashboard').classList.add('tabata-mode');
+
+  startPhase(0);
+  t.intervalId = setInterval(tickTabata, 100);
+}
+
+function stopTabata() {
+  const t = state.tabata;
+  t.active = false;
+  clearInterval(t.intervalId);
+  clearInterval(t.periodicPromptId);
+  clearTimeout(t.promptTimerId);
+  t.promptPendingIds.forEach(id => clearTimeout(id));
+  t.promptPendingIds = [];
+  document.getElementById('screen-dashboard').classList.remove('tabata-mode');
 }
 
 /* ─── Calorie + Award Calculations ───────────────────────────────────────── */
@@ -721,6 +1137,63 @@ function renderSummary() {
     });
   });
 
+  // Tabata-specific metrics
+  if (state.workoutType === 'tabata') {
+    const tabataSets = TABATA_PHASES.filter(p => p.type === 'tabata');
+    const isSolo = state.sessionMode === 'solo';
+
+    [0, 1].forEach(i => {
+      if (isSolo && i === 1) return;
+      const card = document.getElementById('summaryCard' + i);
+
+      // Remove any previous tabata metrics block
+      const old = card.querySelector('.tabata-summary-metrics');
+      if (old) old.remove();
+
+      // Interval completion per set
+      const setRows = tabataSets.map(phase => {
+        const rounds = state.tabata.completions.filter(
+          c => c.setId === phase.id && c.zone >= 4
+        ).length;
+        const total = state.tabata.completions.filter(c => c.setId === phase.id).length;
+        const totalExpected = phase.rounds;
+        return `<div class="tabata-metric-row">
+          <span class="tabata-metric-label">${phase.subtitle || phase.name}</span>
+          <span class="tabata-metric-value">${rounds} / ${totalExpected || total} at Z4+</span>
+        </div>`;
+      }).join('');
+
+      // Recovery efficiency (avg drop time)
+      const drops = state.tabata.recoveryData.map(r => r.dropMs).filter(d => d > 0);
+      const avgDrop = drops.length ? drops.reduce((a, b) => a + b, 0) / drops.length : null;
+      const recovEff = avgDrop === null ? '--'
+        : avgDrop < 15000 ? 'Fast'
+        : avgDrop < 30000 ? 'Moderate'
+        : 'Slow';
+
+      // Training load: Σ(zoneNumber × zoneTimeMinutes)
+      const u = state.users[i];
+      const trainingLoad = Math.round(
+        u.zoneTime.reduce((sum, ms, z) => sum + (z + 1) * (ms / 60000), 0)
+      );
+
+      const block = document.createElement('div');
+      block.className = 'tabata-summary-metrics';
+      block.innerHTML = `
+        <div class="summary-zones__title" style="margin-top:12px">Tabata Metrics</div>
+        ${setRows}
+        <div class="tabata-metric-row">
+          <span class="tabata-metric-label">Recovery Efficiency</span>
+          <span class="tabata-metric-value">${recovEff}</span>
+        </div>
+        <div class="tabata-metric-row">
+          <span class="tabata-metric-label">Training Load</span>
+          <span class="tabata-metric-value">${trainingLoad}</span>
+        </div>`;
+      card.appendChild(block);
+    });
+  }
+
   // Render per-user summary graphs from full session history
   renderUserGraph(document.getElementById('graphCanvasSummary0'), 0);
   renderUserGraph(document.getElementById('graphCanvasSummary1'), 1);
@@ -729,6 +1202,8 @@ function renderSummary() {
 }
 
 function initNewSession() {
+  if (state.tabata.active) stopTabata();
+
   // Disconnect any lingering BLE before returning to setup
   state.users.forEach(u => {
     try { if (u.device && u.device.gatt.connected) u.device.gatt.disconnect(); } catch (_) {}
@@ -745,14 +1220,17 @@ function initNewSession() {
     setStatus(i, 'Not connected', '');
   });
 
-  document.getElementById('modeDuo').checked = true;
-  setSessionMode('duo', document.getElementById('startBtn'));
-  showScreen('screen-setup');
+  document.querySelectorAll('input[name="modeSelect"], input[name="workoutType"]')
+    .forEach(r => { r.checked = false; });
+  document.getElementById('continueBtn').disabled = true;
+  state.workoutType = null;
+  showScreen('screen-mode');
 }
 
 /* ─── Boot ────────────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initModeScreen();
   initSetup();
   document.getElementById('endBtn').addEventListener('click', endWorkout);
   document.getElementById('newSessionBtn').addEventListener('click', initNewSession);

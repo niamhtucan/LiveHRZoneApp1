@@ -104,6 +104,44 @@ ratio = currentHR / maxHR
 
 `setSessionMode(mode, startBtn)` handles all UI side-effects: toggling `.mode-btn--active`, hiding/showing `#setupUser1`, disconnecting User 1 if switching to solo mid-connect, calling `updateStartButton()`. `initNewSession()` resets mode to `'duo'`.
 
+## Workout Type
+
+`state.workoutType` — `'free-ride'` or `'tabata'`. Set on the mode selector screen, `null` until selected. Memory-only.
+
+- **Free Ride**: no guided structure. Dashboard shows tiles + graphs, no overlay.
+- **Tabata Ride**: `startTabata()` is called from `startWorkout()` after `showScreen`. Adds `.tabata-mode` class to `#screen-dashboard`, hides `.dash-hero`, shows `#tabataOverlay`.
+
+## Tabata Mode
+
+### Phase engine
+`TABATA_PHASES` — constant array of 9 phase objects (35 min total: warmup 5 + 4×tabata + 3×recovery + cooldown 5 + 1 brief recovery).
+
+Each phase object: `{ id, name, durationMs, type, targetZones, prompts, alerts }`. Tabata-type phases also have `{ rounds, workMs, restMs, physiologicalLag }`.
+
+### Timer architecture
+All timing uses `Date.now()` diffs — never accumulated `setInterval` ticks. Two timestamps:
+- `state.tabata.phaseStartTime` — when current phase began
+- `state.tabata.intervalStartTime` — when current work/rest interval began
+
+A 100ms `setInterval` drives `tickTabata()`. Each tick: check phase completion → check interval completion → update DOM → run HR evaluation every 3s.
+
+### State
+`state.tabata` holds: `active`, `intervalId`, `phaseIndex`, `phaseStartTime`, `roundIndex`, `intervalPhase`, `intervalStartTime`, `lastHRCheckTime`, `promptTimerId`, `promptPriority` (0=idle,1=info,2=alert,3=safety), `users[i].lowHRRoundCount`, `completions[]`, `recoveryData[]`.
+
+### Prompt system
+`showTabataPrompt(text, type, durationMs, userIndex)` — types: `info/alert/safety`. Lower-priority prompts cannot replace higher-priority ones still displayed. In duo mode with `userIndex` provided, text is prefixed with the user's name.
+
+### Physiological lag rule
+HR evaluation is skipped for rounds 0–2 of every Tabata set (lag for HR to respond to short intervals). `phase.physiologicalLag === true` enables the guard in `evaluateHR()`.
+
+### Safety checks
+Run on every HR data point inside `onHRData()` (not the 3s eval loop): ≥97% maxHR → alert prompt; ≥100% maxHR → safety prompt.
+
+### Summary metrics (Tabata only)
+`state.tabata.completions` — `[{ setId, round, zone }]` per round.
+`state.tabata.recoveryData` — `[{ setId, round, dropMs }]`.
+Computed in `renderSummary()`: interval completion quality, recovery efficiency, training load.
+
 ## Mistakes to Avoid
 - Bad: assuming HR is always a single byte. Always check flags byte bit 0 first.
 - Bad: zone background set via `style.backgroundColor` on every HR tick. Zone class is swapped only when zone number changes.

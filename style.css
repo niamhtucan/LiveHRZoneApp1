@@ -228,6 +228,116 @@ html, body {
   color: #121212;
 }
 
+/* ─── Mode Selector Screen ────────────────────────────────────────────────── */
+.mode-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 20px 48px;
+  gap: 36px;
+}
+
+.mode-group {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.mode-group__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.mode-group__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mode-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+  user-select: none;
+}
+
+.mode-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.mode-card:has(input:checked) {
+  border-color: #B2F332;
+  background: rgba(178, 243, 50, 0.07);
+}
+
+.mode-card__icon {
+  width: 44px;
+  height: 44px;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.2s;
+}
+
+.mode-card:has(input:checked) .mode-card__icon {
+  color: #B2F332;
+}
+
+.mode-card__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mode-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.mode-card__sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.btn-continue {
+  background: var(--zone-2);
+  color: #fff;
+  font-size: 18px;
+  padding: 18px 32px;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-continue:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ─── Solo Dashboard Layout ───────────────────────────────────────────────── */
 #screen-dashboard.solo-mode .user-panel:last-child { display: none; }
 #screen-dashboard.solo-mode .user-panels           { justify-content: center; }
@@ -588,6 +698,164 @@ html, body {
   font-size: 16px;
   text-align: center;
   padding: 40px 0;
+}
+
+/* ─── Tabata Dashboard Overlay ────────────────────────────────────────────── */
+
+/* Hidden by default — shown only when #screen-dashboard has .tabata-mode */
+.tabata-overlay {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+#screen-dashboard.tabata-mode .dash-hero   { display: none; }
+#screen-dashboard.tabata-mode .tabata-overlay { display: flex; }
+
+/* Phase progress bar — full width strip */
+.tabata-phase-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.tabata-phase-bar__fill {
+  height: 100%;
+  background: #B2F332;
+  border-radius: 2px;
+  transition: width 0.5s linear;
+  width: 0%;
+}
+
+/* Phase name + timer row */
+.tabata-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  justify-content: center;
+}
+
+.tabata-phase-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.tabata-phase-timer {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Interval row — round label, WORK/REST, inner timer */
+.tabata-interval-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+}
+
+.tabata-round-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  font-weight: 600;
+}
+
+.tabata-interval-label {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.tabata-interval-label--work { color: #B2F332; }
+.tabata-interval-label--rest { color: rgba(255,255,255,0.45); }
+
+.tabata-interval-timer {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+}
+
+/* Coaching prompt banner */
+.tabata-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  min-height: 36px;
+}
+
+.tabata-prompt--visible {
+  opacity: 1;
+}
+
+.tabata-prompt--info {
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.tabata-prompt--alert {
+  background: rgba(255,152,0,0.15);
+  color: #FF9800;
+  border: 1.5px solid rgba(255,152,0,0.4);
+}
+
+.tabata-prompt--safety {
+  background: rgba(244,67,54,0.18);
+  color: #F44336;
+  border: 2px solid rgba(244,67,54,0.5);
+  animation: tabata-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tabata-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* Tabata summary metrics block */
+.tabata-summary-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tabata-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.tabata-metric-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tabata-metric-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 /* ─── HR Graph Canvas ─────────────────────────────────────────────────────── */

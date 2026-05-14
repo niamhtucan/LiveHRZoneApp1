@@ -8,8 +8,98 @@
 </head>
 <body>
 
+  <!-- ── Mode Selector Screen ───────────────────────────────────────────── -->
+  <div class="screen" id="screen-mode">
+    <div class="mode-screen">
+
+      <!-- Background pill shapes (reuse setup set) -->
+      <div class="setup-bg" aria-hidden="true">
+        <span class="pill pill--1"></span>
+        <span class="pill pill--2"></span>
+        <span class="pill pill--3"></span>
+        <span class="pill pill--4"></span>
+        <span class="pill pill--5"></span>
+        <span class="pill pill--6"></span>
+        <span class="pill pill--7"></span>
+      </div>
+
+      <div class="setup-logo">LiveHRZone</div>
+
+      <!-- Session Type -->
+      <div class="mode-group">
+        <div class="mode-group__title">Session Type</div>
+        <div class="mode-group__cards">
+
+          <label class="mode-card">
+            <input type="radio" name="modeSelect" value="solo">
+            <div class="mode-card__icon">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="7" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <div class="mode-card__title">Solo Session</div>
+            <div class="mode-card__sub">Just you</div>
+          </label>
+
+          <label class="mode-card">
+            <input type="radio" name="modeSelect" value="duo">
+            <div class="mode-card__icon">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="7" r="3.5"/>
+                <circle cx="16" cy="7" r="3.5"/>
+                <path d="M1 20c0-3.3 3-6 7-6 1.1 0 2.1.2 3 .6"/>
+                <path d="M23 20c0-3.3-3-6-7-6s-7 2.7-7 6"/>
+              </svg>
+            </div>
+            <div class="mode-card__title">Duo Session</div>
+            <div class="mode-card__sub">Train together</div>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Workout Type -->
+      <div class="mode-group">
+        <div class="mode-group__title">Workout Type</div>
+        <div class="mode-group__cards">
+
+          <label class="mode-card">
+            <input type="radio" name="workoutType" value="free-ride">
+            <div class="mode-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div class="mode-card__title">Free Ride</div>
+            <div class="mode-card__sub">No structure</div>
+          </label>
+
+          <label class="mode-card">
+            <input type="radio" name="workoutType" value="tabata">
+            <div class="mode-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="13" r="8"/>
+                <polyline points="12 9 12 13 14.5 15.5"/>
+                <line x1="9" y1="3" x2="15" y2="3"/>
+              </svg>
+            </div>
+            <div class="mode-card__title">Tabata Ride</div>
+            <div class="mode-card__sub">Intervals</div>
+          </label>
+
+        </div>
+      </div>
+
+      <button class="btn btn-continue" id="continueBtn" type="button" disabled>Continue →</button>
+
+    </div>
+  </div>
+
   <!-- ── Setup Screen ─────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-setup">
+  <div class="screen" id="screen-setup" hidden>
     <div class="setup-screen">
 
       <!-- Background pill shapes -->
@@ -62,18 +152,6 @@
           <ellipse cx="960" cy="130" rx="160" ry="100" fill="#F3EEE8"/>
         </g>
       </svg>
-
-      <!-- Session mode selector -->
-      <div class="mode-selector">
-        <label class="mode-label">
-          <input type="radio" name="sessionMode" id="modeSolo" value="solo">
-          Solo Session
-        </label>
-        <label class="mode-label">
-          <input type="radio" name="sessionMode" id="modeDuo" value="duo" checked>
-          Duo Session
-        </label>
-      </div>
 
       <div class="setup-users">
         <!-- User 0 -->
@@ -163,6 +241,25 @@
           <ellipse cx="870" cy="115" rx="150" ry="90"  fill="#F3EEE8"/>
         </g>
       </svg>
+
+      <!-- Tabata overlay — visible only in tabata-mode -->
+      <div id="tabataOverlay" class="tabata-overlay" aria-live="polite">
+        <div class="tabata-phase-bar">
+          <div id="tabataPhaseProgress" class="tabata-phase-bar__fill"></div>
+        </div>
+        <div class="tabata-header">
+          <div id="tabataPhaseName" class="tabata-phase-name"></div>
+          <div id="tabataPhaseTimer" class="tabata-phase-timer">0:00</div>
+        </div>
+        <div id="tabataIntervalRow" class="tabata-interval-row">
+          <span id="tabataRoundLabel" class="tabata-round-label"></span>
+          <span id="tabataIntervalLabel" class="tabata-interval-label"></span>
+          <span id="tabataIntervalTimer" class="tabata-interval-timer"></span>
+        </div>
+        <div id="tabataPrompt" class="tabata-prompt" hidden>
+          <span id="tabataPromptText"></span>
+        </div>
+      </div>
 
       <div class="user-panels">
 

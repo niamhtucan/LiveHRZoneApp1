@@ -572,12 +572,17 @@ html, body {
 
 .user-panel .tile { flex: none; height: 230px; }
 
-@media (orientation: portrait), (max-width: 768px) {
+@media (orientation: portrait), (max-aspect-ratio: 1/1) {
   .user-panels { flex-direction: column; }
+  .user-panel .tile { height: 180px; }
 }
 
-@media (max-width: 768px) {
-  .user-panel .tile { height: 180px; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .user-panels { flex-direction: row; }
+  .user-panel .tile {
+    height: calc(100vh - 93px);
+    min-height: 160px;
+  }
 }
 
 /* ─── Tile ────────────────────────────────────────────────────────────────── */

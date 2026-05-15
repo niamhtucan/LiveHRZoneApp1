@@ -146,8 +146,8 @@ const state = {
     periodicPromptId:     null,
     promptPriority:       0,     // 0=idle, 1=info, 2=alert, 3=safety
     users: [
-      { lowHRRoundCount: 0, lastWorkZone: 0 },
-      { lowHRRoundCount: 0, lastWorkZone: 0 },
+      { lowHRRoundCount: 0, lastWorkZone: 0, hrAtWorkEnd: 0 },
+      { lowHRRoundCount: 0, lastWorkZone: 0, hrAtWorkEnd: 0 },
     ],
     completions:  [],
     recoveryData: [],
@@ -922,25 +922,34 @@ function advanceInterval(phase) {
   const t   = state.tabata;
   const now = Date.now();
 
+  const indices = state.sessionMode === 'solo' ? [0] : [0, 1];
+
   if (t.intervalPhase === 'work') {
-    // Record completion for each connected user
-    const indices = state.sessionMode === 'solo' ? [0] : [0, 1];
+    // Record completion and capture HR at end of work for recovery tracking
     indices.forEach(i => {
       if (state.users[i].connected) {
-        t.completions.push({ setId: phase.id, round: t.roundIndex, zone: state.users[i].zone });
+        t.completions.push({ setId: phase.id, round: t.roundIndex, zone: state.users[i].zone, userIndex: i });
+        t.users[i].hrAtWorkEnd = state.users[i].hr;
       }
     });
     t.intervalPhase    = 'rest';
     t.intervalStartTime = now;
     showTabataPrompt(pickRandom(phase.prompts.rest), 'info', 3500);
   } else {
+    // Record HR drop from end-of-work to end-of-rest for recovery efficiency
+    indices.forEach(i => {
+      if (state.users[i].connected && t.users[i].hrAtWorkEnd > 0) {
+        const dropBpm = t.users[i].hrAtWorkEnd - state.users[i].hr;
+        t.recoveryData.push({ setId: phase.id, round: t.roundIndex, userIndex: i, dropBpm });
+        t.users[i].hrAtWorkEnd = 0;
+      }
+    });
     t.roundIndex++;
     if (t.roundIndex >= phase.rounds) {
       advancePhase();
     } else {
       t.intervalPhase    = 'work';
       t.intervalStartTime = now;
-      // Reset lowHRRoundCount per-round is done in evaluateHR; reset between work intervals
       showTabataPrompt(pickRandom(phase.prompts.work), 'info', 3000);
     }
   }
@@ -969,6 +978,8 @@ function startPhase(i) {
   t.lastHRCheckTime    = now;
   t.users[0].lowHRRoundCount = 0;
   t.users[1].lowHRRoundCount = 0;
+  t.users[0].hrAtWorkEnd = 0;
+  t.users[1].hrAtWorkEnd = 0;
 
   scheduleStartPrompts(phase);
 
@@ -1211,13 +1222,20 @@ function formatMinSec(ms) {
 
 function renderSummary() {
   const isSolo   = state.sessionMode === 'solo';
-  const isMobile = window.innerWidth <= 640;
+  const isMobile = window.innerWidth <= 768;
 
-  // Rule 1 — Solo: remove panel 1, canvas 1, and dots from DOM entirely
+  // Reset dynamic elements for multi-session reuse
+  const summaryPanel1  = document.getElementById('summaryPanel1');
+  const summaryCanvas1 = document.getElementById('graphCanvasSummary1');
+  const summaryDots    = document.getElementById('summaryCardDots');
+  if (summaryPanel1)  summaryPanel1.hidden  = false;
+  if (summaryCanvas1) summaryCanvas1.hidden = false;
+  if (summaryDots)    summaryDots.hidden    = true;
+
+  // Rule 1 — Solo: hide panel 1 and canvas 1
   if (isSolo) {
-    document.getElementById('summaryPanel1')?.remove();
-    document.getElementById('graphCanvasSummary1')?.remove();
-    document.getElementById('summaryCardDots')?.remove();
+    if (summaryPanel1)  summaryPanel1.hidden  = true;
+    if (summaryCanvas1) summaryCanvas1.hidden = true;
   }
 
   state.users.forEach((u, i) => {
@@ -1256,25 +1274,27 @@ function renderSummary() {
       const old = card.querySelector('.tabata-summary-metrics');
       if (old) old.remove();
 
-      // Interval completion per set
+      // Interval completion per set, filtered to this user
       const setRows = tabataSets.map(phase => {
         const rounds = state.tabata.completions.filter(
-          c => c.setId === phase.id && c.zone >= 4
+          c => c.setId === phase.id && c.userIndex === i && c.zone >= 4
         ).length;
-        const total = state.tabata.completions.filter(c => c.setId === phase.id).length;
         const totalExpected = phase.rounds;
         return `<div class="tabata-metric-row">
           <span class="tabata-metric-label">${phase.subtitle || phase.name}</span>
-          <span class="tabata-metric-value">${rounds} / ${totalExpected || total} at Z4+</span>
+          <span class="tabata-metric-value">${rounds} / ${totalExpected} at Z4+</span>
         </div>`;
       }).join('');
 
-      // Recovery efficiency (avg drop time)
-      const drops = state.tabata.recoveryData.map(r => r.dropMs).filter(d => d > 0);
+      // Recovery efficiency: avg HR drop (bpm) from end-of-work to end-of-rest
+      const drops = state.tabata.recoveryData
+        .filter(r => r.userIndex === i)
+        .map(r => r.dropBpm)
+        .filter(d => d > 0);
       const avgDrop = drops.length ? drops.reduce((a, b) => a + b, 0) / drops.length : null;
-      const recovEff = avgDrop === null ? '--'
-        : avgDrop < 15000 ? 'Fast'
-        : avgDrop < 30000 ? 'Moderate'
+      const recovEff = avgDrop === null ? 'Not enough data'
+        : avgDrop >= 15 ? 'Fast'
+        : avgDrop >= 8  ? 'Moderate'
         : 'Slow';
 
       // Training load: Σ(zoneNumber × zoneTimeMinutes)
@@ -1304,8 +1324,11 @@ function renderSummary() {
   renderUserGraph(document.getElementById('graphCanvasSummary0'), 0);
   if (!isSolo) renderUserGraph(document.getElementById('graphCanvasSummary1'), 1);
 
-  // Rule 3 — Duo mobile: activate swipe between stat cards
-  if (!isSolo && isMobile) setupSummarySwipe();
+  // Rule 3 — Duo mobile: show dots and activate swipe between stat cards
+  if (!isSolo && isMobile) {
+    if (summaryDots) summaryDots.hidden = false;
+    setupSummarySwipe();
+  }
 
   renderAwards(computeAwards(state.users));
 }

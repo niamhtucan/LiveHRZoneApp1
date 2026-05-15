@@ -525,11 +525,21 @@ html, body {
   overflow: hidden;
 }
 
+/* Mobile: allow full-page scroll; pills are clipped by .dash-bg instead */
+@media (max-width: 1024px) {
+  .dashboard-screen {
+    height: auto;
+    min-height: 100svh;
+    overflow-y: auto;
+  }
+}
+
 .dash-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .dash-hero {
@@ -562,8 +572,12 @@ html, body {
 
 .user-panel .tile { flex: none; height: 230px; }
 
-@media (orientation: portrait) {
+@media (orientation: portrait), (max-width: 768px) {
   .user-panels { flex-direction: column; }
+}
+
+@media (max-width: 768px) {
+  .user-panel .tile { height: 180px; }
 }
 
 /* ─── Tile ────────────────────────────────────────────────────────────────── */
@@ -752,9 +766,9 @@ html, body {
   z-index: 1;
 }
 
-/* Dot pagination — hidden on desktop */
+/* Dot pagination — hidden via [hidden] attribute by default, shown by JS for duo mobile */
 .summary-card-dots {
-  display: none;
+  display: flex;
   gap: 8px;
   justify-content: center;
   position: relative;
@@ -774,7 +788,7 @@ html, body {
 
 .summary-graphs .graph-canvas--summary { flex: 1; }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .summary-card-viewport {
     overflow: hidden;
     max-width: 480px;
@@ -784,7 +798,6 @@ html, body {
     flex: 0 0 100%;
     width: 100%;
   }
-  .summary-card-dots { display: flex; }
   .summary-graphs {
     flex-direction: column;
     max-width: 480px;
